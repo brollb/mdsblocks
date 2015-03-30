@@ -25,6 +25,16 @@ describe('Github Loader Tests', function() {
     });
 
     describe('MetaMDS Stuff', function() {
+        it('should read manifest from github', function(done) {
+            loader.loadProject('https://github.com/ElTester/octokatTest', function(err) {
+                expect(err).toBe(null);
+
+                console.log(loader.loadedConcepts.project);
+                expect(loader.loadedConcepts.project).toNotBe(undefined);
+                done();
+            });
+        });
+
         it('should load in dependencies of a project', function(done) {
             loader.loadProject('https://github.com/ElTester/octokatTest', function(err) {
                 expect(err).toBe(null);
@@ -53,10 +63,17 @@ describe('Github Loader Tests', function() {
             });
         });
 
-        it.skip('should load blocks by first occurrence in "path"', function(done) {
+        it.skip('should store concepts of dependents', function(done) {
+            loader.loadProject('https://github.com/ElTester/octokatTest', function(err) {
+                expect(err).toBe(null);
+
+                console.log(loader.loadedConcepts.lj_pair);
+                expect(loader.loadedConcepts.lj_pair).toNotBe(undefined);
+                done();
+            });
         });
 
-        it.skip('should load in dependencies of a project', function(done) {
+        it.skip('should load blocks by first occurrence in "path"', function(done) {
         });
 
     });

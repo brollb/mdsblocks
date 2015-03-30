@@ -66,7 +66,7 @@
         // Retrieve the project.yaml file
         manifest.then(function(result) {
             var deps = yaml.load(result).path;
-            console.log('manifest is ',result);
+            self.loadedConcepts[Utils.removeFileExtension(manifestFileName)] = result;
 
             // Convert urls to project name and remove already loaded projects
             deps = R.map(self._cleanUrl, deps).filter(function(e) {
@@ -75,7 +75,6 @@
 
             // Filter deps by those that are not already loaded
             async.each(deps, function(info, callback) {
-                console.log('info is', info);
                 return self._loadProject.call(self, info, callback);
                 },
                 function(err) {
@@ -90,6 +89,13 @@
                             files = R.map(Utils.getAttribute('name'), files).filter(Utils.isYamlFile);
                             
                             // For each yaml file, store it w/o extname as loadedConcept
+                            // Remove files that are already loaded
+                            files = R.reject(function(e) {
+                                var conceptName = Utils.removeFileExtension(e);
+                                return !!self.loadedConcepts[conceptName];
+                            }, files);
+
+                            // Store remaining concepts
                             files.forEach(function(file) {
                                 var contents = v.contents(file).read();
                                 contents.then(function(result) {
