@@ -1,0 +1,6 @@
+description: "runs the simulation with a specified number of steps"
+type: statement
+properties:
+  num_steps:
+      type: number
+required: [ num_steps ]

@@ -1,0 +1,14 @@
+description: "a blocl representing a simulation"
+properties:
+  target:
+      type: string
+      description: "target simulator"
+  simulation_script_file_name:
+      type: string
+      description: "name of the file into which the simulation script will be saved"
+  simulator_executable:
+      type: string
+  statements:
+      description: "list of statements"
+      type: list
+required: [target, simulation_script_file_name, simulator_executable, statements]

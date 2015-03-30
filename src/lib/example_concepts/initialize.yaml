@@ -1,0 +1,4 @@
+description: "initializes the simulation"
+properties:
+  - fileName:
+      type: string

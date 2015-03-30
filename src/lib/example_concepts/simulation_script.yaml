@@ -1,0 +1,12 @@
+description: "a block representing a simulation script"
+properties:
+  target:
+      type: string
+      description: "target simulator"
+  simulation_script_file_name:
+      type: string
+      description: "name of the file into which the simulation script will be saved"
+  statements:
+      description: "list of statements"
+      type: list
+required: [target, simulation_script_file_name, statements]

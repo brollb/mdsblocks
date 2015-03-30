@@ -1,0 +1,18 @@
+description: "define a LJ pair interaction"
+properties:
+  r_cut:
+      description: "cutoff"
+      type: number
+  atom_type_1:
+      description: "type of atom #1"
+      type: string
+  atom_type_2:
+      description: "type of atom #2"
+      type: string
+  epsilon:
+      description: "epsilon parameter"
+      type: number
+  sigma:
+      description: "sigma parameter"
+      type: number
+required: [r_cut, atom_type_1, atom_type_2, epsilon, sigma]

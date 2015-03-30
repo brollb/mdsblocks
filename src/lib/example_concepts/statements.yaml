@@ -1,0 +1,10 @@
+description: "list of statements"
+type: statement
+properties:
+  statements:
+      description: list of statements
+      type: list
+      items:
+        type: statement
+      minItems: 1
+required: [ statements ]
