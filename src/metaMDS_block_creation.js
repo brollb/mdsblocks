@@ -31,6 +31,7 @@
                 this.setNextStatement(true);
 
                 // For each of the "properties", create an input
+                console.log('concept is', concept);
                 var properties = Object.keys(concept.properties),
                     displayName,
                     type,

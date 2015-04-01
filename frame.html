@@ -6,10 +6,14 @@
     <script src="blockly/blocks_compressed.js"></script>
     <script src="blockly/msg/js/en.js"></script>
     <script src="src/lib/yaml.min.js"></script>
+    <script src="src/lib/ramda.min.js"></script>
+    <script src="src/lib/async.js"></script>
+    <script src="src/lib/octokat.js"></script>
     <script src="src/utils.js"></script>
 
     <script src="src/metaMDS_block_creation.js"></script>
     <script src="src/concept_loader.js"></script>
+    <script src="src/github_loader.js"></script>
     <script src="src/lib/example_concepts/yaml_concepts.js"></script>
     <style>
       html, body {
@@ -26,17 +30,49 @@
     </style>
     <script>
       function init() {
+          var toolbox = document.getElementById('toolbox');
+
+          initGithubConcepts(toolbox, function() {
+          });
+      }
+
+      function initBasicConcepts(toolbox) {
         // Access github and load the blocks
         var loader = new ConceptLoader(),
-        toolbox = document.getElementById('toolbox'),
-        blockCreator = new MDSBlockCreator(toolbox);
+            blockCreator = new MDSBlockCreator(toolbox);
         
         console.log('loading '+testFiles.length+' blocks');
         // Load the example blocks
         for (var i = testFiles.length; i--;) {
             blockCreator.createBlock(testFiles[i].name, testFiles[i].content, 'Basic Examples');
         }
+        initializeBlockly(toolbox);
+      }
 
+      function initGithubConcepts(toolbox) {
+        // Access github and load the blocks
+        var loader = new GithubLoader(),
+            blockCreator = new MDSBlockCreator(toolbox);
+        
+        //var url = prompt('Enter github URL:');
+        loader.loadProject('https://github.com/ElTester/octokatTest', function(err) {
+            if (err) {
+                console.error(err);
+            }
+            // Create blocks for each concept
+            var concepts = loader.getConcepts();
+            console.log('Loaded concepts:', concepts);
+
+            // Load the example blocks
+            for (var i = concepts.length; i--;) {
+                console.log('Creating block for '+concepts[i]);
+                blockCreator.createBlock(concepts[i], loader.loadedConcepts[concepts[i]], 'Basic Examples');
+            }
+            initializeBlockly(toolbox);
+        });
+      }
+
+      function initializeBlockly(toolbox) {
         Blockly.inject(document.body,
             {toolbox: toolbox});
         // Let the top-level application know that Blockly is ready.

@@ -7,11 +7,13 @@
     'use strict';
 
     var manifestFileName = 'project.yaml';
+    var oauth = {token:'db536deb6c4d8a9ae48a936be26d79e4839e9515'};  // REMOVE
 
     var GithubLoader = function(auth) {
-        this._octo = new Octokat(auth);
+        console.log('Using '+(auth || oauth));
+        this._octo = new Octokat(auth || oauth);
 
-        this._manifestFileName = 'project.yaml';  //Accessible for testing
+        this._manifestFileName = 'project.yaml';  // Accessible for testing
         this.loadedConcepts = {};  // yaml files stored by id
     };
 
@@ -46,6 +48,20 @@
     };
 
     /**
+     * Get the concept names currently loaded.
+     *
+     * @return {Array<String>}
+     */
+    GithubLoader.prototype.getConcepts = function() {
+        var names = Object.keys(this.loadedConcepts),
+            i = names.indexOf(manifestFileName.replace('.yaml',''));
+
+        names.splice(i,1);
+
+        return names;
+    };
+
+    /**
      * Internal project loading. 
      *
      * @return {undefined}
@@ -73,16 +89,16 @@
                 return !self.isProjectLoaded(e);
             });
 
-            // Filter deps by those that are not already loaded
+            // Load all dependencies in parallel
             async.each(deps, function(info, callback) {
                 return self._loadProject.call(self, info, callback);
                 },
                 function(err) {
+                    console.log('Calling callback!');
                     // Load all blocks in the project!
                     // For each .yaml file in the root path, store it as a
                     // concept
                     self._octo.repos(owner, projectName).fetch(function(e, v) {
-                        console.log('Fetched', v, 'for repo: '+owner+'/'+projectName);
                         v.contents('').read().then(function(res) {
                             var files = JSON.parse(res);
                             // Remove all non-yaml files
@@ -96,22 +112,24 @@
                             }, files);
 
                             // Store remaining concepts
-                            files.forEach(function(file) {
-                                var contents = v.contents(file).read();
-                                contents.then(function(result) {
-                                    self.loadedConcepts[Utils.removeFileExtension(file)] = result;
+                            var len = files.length;
+                            if (len) {
+                                files.forEach(function(file) {
+                                    var contents = v.contents(file).read();
+                                    contents.then(function(result) {
+                                        self.loadedConcepts[Utils.removeFileExtension(file)] = result;
+                                        if (--len === 0) {
+                                            callback(null);
+                                        }
+                                    });
                                 });
-                                
-                            });
+                            } else {
+                                callback(null);
+                            }
                         });
                     });
-                    console.log('about to call the callback!');
-                    callback(null);
             });
         });
-    };
-
-    GithubLoader.prototype._loadDependents = function(info, callback) {
     };
 
     global.GithubLoader = GithubLoader;
