@@ -65,11 +65,11 @@
             var concepts = loader.getConcepts();
             console.log('Loaded concepts:', concepts);
 
+            blockCreator.createBlocks(concepts);
             // Load the example blocks
-            for (var i = concepts.length; i--;) {
-                console.log('Creating block for '+concepts[i]);
-                blockCreator.createBlock(concepts[i], loader.loadedConcepts[concepts[i]], 'Basic Examples');
-            }
+            //for (var i = concepts.length; i--;) {
+                //blockCreator.createBlock(concepts[i], loader.loadedConcepts[concepts[i]], 'Basic Examples');
+            //}
             initializeBlockly(toolbox);
         });
       }

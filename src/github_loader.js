@@ -61,17 +61,17 @@
     };
 
     /**
-     * Get the concept names currently loaded.
+     * Get the concepts currently loaded.
      *
-     * @return {Array<String>}
+     * @return {Dictionary<Concept>}
      */
     GithubLoader.prototype.getConcepts = function() {
-        var names = Object.keys(this.loadedConcepts),
-            i = names.indexOf(manifestFileName.replace('.yaml',''));
+        var isProjectManifest = R.partial(R.eq, Utils.removeFileExtension(manifestFileName)),
+            fn = R.pipe(R.nthArg(1), function(v) {
+                return !isProjectManifest(v);
+            });
 
-        names.splice(i,1);
-
-        return names;
+        return R.pickBy(fn, this.loadedConcepts);
     };
 
     /**
@@ -94,7 +94,7 @@
         // Record the project as loaded
         console.log('Loading '+info);
         if (path !== '') {
-            path = '/' + path;
+            //path = '/' + path;
         }
         this.loadedProjects[info] = true;
 
@@ -122,9 +122,14 @@
                     self._octo.repos(owner, projectName).fetch(function(e, v) {
                         console.log('About to read path:', path);
                         v.contents(path).read().then(function(res) {
+                        console.log('Finished reading', path);
+
                             var files = JSON.parse(res);
                             // Remove all non-yaml files
-                            files = R.map(Utils.getAttribute('name'), files).filter(Utils.isYamlFile);
+                            files = R.map(R.partialRight(Utils.getAttribute,'name'), files)
+                                    .filter(Utils.isYamlFile);
+
+                            console.log('files', files);
                             
                             // For each yaml file, store it w/o extname as loadedConcept
                             // Remove files that are already loaded
@@ -135,7 +140,7 @@
 
                             // Change the relative paths to include the repo's path used
                             if (path) {
-                                prependPath = R.partial(R.concat, path.substring(1)+'/');
+                                prependPath = R.partial(R.concat, path+'/');
                                 files = R.map(prependPath, files);
                                 console.log('files are:', files);
                             }

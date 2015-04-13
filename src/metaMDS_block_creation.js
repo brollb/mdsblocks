@@ -28,7 +28,19 @@
         // Add 'name' to the concept
         var addNameToConcept = R.partial(Utils.addAttribute, 'name');
         R.mapObjIndexed(addNameToConcept, concepts);
-        return R.values(concepts);
+
+        // clean the names
+        var names = Object.keys(concepts),
+            name,
+            result = {};
+
+        for (var i = names.length;i--;) {
+            name = this._cleanName(names[i]);
+            concepts[names[i]].name = name;
+            result[name] = concepts[names[i]];
+        }
+
+        return result;
     };
 
     /**
@@ -39,7 +51,7 @@
      */
     MDSBlockCreator.prototype._sortConcepts = function(concepts) {
         var nodes = this._createGraph(R.clone(concepts)),
-            dict = Utils.createDictionary(Utils.getAttribute('name'), concepts),
+            dict = Utils.createDictionary(R.partialRight(Utils.getAttribute, 'name'), concepts),
             isInDict = R.partialRight(R.has, dict),
             removeNonDictTypes = R.partial(R.filter, isInDict);
 
@@ -52,7 +64,6 @@
             return concepts[index].name;
         };
         var nodeDict = Utils.createDictionary(getNameFromConceptArray, nodes);
-        console.log('nodeDict', nodeDict);
         
         // Sort the remaining nodes
         var independents, 
@@ -61,7 +72,6 @@
 
         while (Object.keys(nodeDict).length) {
             independents = Object.keys(R.pickBy(Utils.isEmpty, nodeDict));
-            console.log('independents:', independents);
             if (!independents.length) {  // Cycle detected
                 console.error('There is no topological sort for the given blocks!');
                 break;
@@ -74,7 +84,6 @@
             }
         }
 
-        console.log('Finished!');
         return orderedNodes;
     };
 
@@ -103,13 +112,12 @@
     MDSBlockCreator.prototype._createGraph = function(concepts) {
         // For each concept, create a node with edges to it's dependencies
         // Ignore dependencies that are non-concepts (atomic)
-        var names = R.map(Utils.getAttribute('name'), concepts),
-            properties = R.map(Utils.getAttribute('properties'), concepts),
-            getTypes = R.partial(R.mapObj, Utils.getAttribute('type'));
+        var names = R.map(R.partialRight(Utils.getAttribute,'name'), concepts),
+            properties = R.map(R.partialRight(Utils.getAttribute,'properties'), concepts),
+            getTypes = R.partial(R.mapObj, R.partialRight(Utils.getAttribute,'type'));
 
         // For each property, get the type
         properties = R.map(getTypes, properties);
-        console.log('properties:', properties);
         return R.map(R.values, properties);
     };
 
@@ -121,39 +129,48 @@
      */
     MDSBlockCreator.prototype.createBlocks = function(yamlConcepts) {
         // Create JSON from yamlConcepts
-        var concepts = this.cleanConceptInput(yamlConcepts);
+        var conceptMap = this.cleanConceptInput(yamlConcepts),
+            concepts = R.values(conceptMap);
 
         // Sort the blocks by meta vs instance (ie, meta ... instance)
-        // TODO
+        var meta = R.filter(this.isMetaConcept, concepts),
+            instances = R.reject(this.isMetaConcept, concepts);
 
         // Topological sort on the meta blocks
-        // TODO
+        meta = this._sortConcepts(meta);
 
         // Create blocks in the given order!
-        // TODO
+        var metaConcepts = meta.map(R.partial(Utils.getAttribute, conceptMap)),
+            metaBlocks = metaConcepts.map(this._createMetaBlock.bind(this));
+    };
+
+    MDSBlockCreator.prototype._cleanName = function(name) {
+        return /[\w\.\-_]+$/.exec(name)[0];
     };
 
     MDSBlockCreator.prototype.createBlock = function(name, yamlContent, category) {
         var concept = yaml.load(yamlContent);
 
-        concept.name = name;
+        concept.name = this._cleanName(name);  // Remove the filename from the path
 
         // Create the block from the concept json
-        Blockly.Blocks[name] = {
-            init: this._createInitFn(concept)
-        };
+        Blockly.Blocks[name] = this._createGenericBlock(concept);
 
         // Add the block to the toolbox
         this._addBlock(name, category);
     };
 
-    MDSBlockCreator.prototype._createInitFn = function(concept) {
+    MDSBlockCreator.prototype.renderBlocks = function() {
+        // TODO
+    };
+
+    MDSBlockCreator.prototype._createGenericBlock = function(concept) {
         // Divide the concepts based on a couple basic block types
-        if (concept.properties && concept.description) {
-            this._createMetaBlock(concept);
-        } else {
-            this._createInstanceBlock(concept);
+        if (this.isMetaConcept(concept)) {
+            return this._createMetaBlock(concept);
         }
+
+        return this._createInstanceBlock(concept);
     };
 
     MDSBlockCreator.prototype._createInstanceBlock = function(concept) {
@@ -162,13 +179,22 @@
         // TODO
     };
 
+    /**
+     * Create the input for the blockly blocks.
+     *
+     * @param concept
+     * @return {undefined}
+     */
     MDSBlockCreator.prototype._createMetaBlock = function(concept) {
-        return function() {
+        console.log('Creating Meta Block. Concept is', concept);
+        var name = Utils.capitalize(concept.name);
+        var init= function() {
             this.setTooltip(concept.description);
 
             // Make it a statement with connections to prior and subsequent blocks
             this.setPreviousStatement(true);
             this.setNextStatement(true);
+            //this.setOutput(true/*, name*/);
 
             // For each of the "properties", create an input
             console.log('concept is', concept);
@@ -180,7 +206,7 @@
             for (var i = 0; i < properties.length; i++) {  // Order may be more intuitive
 
                 displayName = properties[i].replace(/_/g, ' ');
-                type = Utils.capitalize(concept.properties[properties[i]].type || '');
+                type = Utils.capitalize(concept.properties[properties[i]].type || 'Default');
 
                 if (type.toLowerCase() === 'list') {
                     displayName += ':';
@@ -191,16 +217,13 @@
 
                 // Set the acceptable types
                 input.setCheck(type)
-                    // Pretty things up 
-                    .appendField(displayName)
-                    .setAlign(Blockly.ALIGN_RIGHT);
+                // Pretty things up 
+                .appendField(displayName)
+                .setAlign(Blockly.ALIGN_RIGHT);
 
-                    if (input.description) {
-                        input.setTooltip(input.description);
-                    }
-
-                // Add typechecking?
-                // TODO
+                if (input.description) {
+                    input.setTooltip(input.description);
+                }
             }
 
             // Handle the required input?
@@ -213,6 +236,12 @@
 
             this.setColour(Math.random()*360);
         };
+
+        this._addBlock(name, 'Basic Examples');
+        return Blockly.Blocks[name] = {init: init};
+
+        // Add the block to the toolbox
+        //return {init: init};
     };
 
     //MDSBlockCreator.prototype._addFieldToBlock = function(id, category)

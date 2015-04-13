@@ -1,6 +1,6 @@
-/*globals ConceptLoader,expect,describe,it,before,MDSBlockCreator,beforeEach*/
+/*globals R,ConceptLoader,expect,describe,it,before,MDSBlockCreator,beforeEach*/
 'use strict';
-describe.only('Block creator tests', function() {
+describe('Block creator tests', function() {
     var blockCreator,
         loader;
 
@@ -26,7 +26,7 @@ describe.only('Block creator tests', function() {
             var input = loader.loadExampleConcepts(),
                 results = blockCreator.cleanConceptInput(input);
 
-            results.forEach(function(concept) {
+            R.values(results).forEach(function(concept) {
                 expect(typeof concept).toBe('object');
             });
 
@@ -36,7 +36,7 @@ describe.only('Block creator tests', function() {
             var input = loader.loadExampleConcepts(),
                 results = blockCreator.cleanConceptInput(input);
 
-            results.forEach(function(concept) {
+            R.values(results).forEach(function(concept) {
                 expect(concept.name).toNotBe(undefined);
             });
 
@@ -48,17 +48,18 @@ describe.only('Block creator tests', function() {
             var input = loader.loadExampleConcepts(),
                 results = blockCreator.cleanConceptInput(input);
 
-            results.forEach(function(concept) {
-                expect(concept.name).toNotBe(undefined);
+            console.log('results', results);
+            R.values(results).forEach(function(concept) {
+                expect(concept.name).toExist();
             });
 
-            var nodes = blockCreator._createGraph(results);
+            var nodes = blockCreator._createGraph(R.values(results));
             expect(nodes.length).toBe(Object.keys(input).length);
         });
         
         it('should return types for each node', function() {
             var input = loader.loadExampleConcepts(),
-                results = blockCreator.cleanConceptInput(input);
+                results = R.values(blockCreator.cleanConceptInput(input));
 
             results.forEach(function(concept) {
                 expect(concept.name).toNotBe(undefined);
@@ -81,7 +82,7 @@ describe.only('Block creator tests', function() {
 
         beforeEach(function() {
             input = loader.loadExampleConcepts();
-            results = blockCreator.cleanConceptInput(input);
+            results = R.values(blockCreator.cleanConceptInput(input));
         });
 
         // Helpers
@@ -102,6 +103,12 @@ describe.only('Block creator tests', function() {
             exec_nodes.forEach(function(n) {
                 var num = /\d+/.exec(n)[0];
                 expect(nodes.indexOf('sim_user'+num)).toBeGreaterThan(nodes.indexOf(n));
+            });
+        });
+
+        describe('createBlocks', function() {
+            it.only('should be ordered', function() {
+                blockCreator.createBlocks(input);
             });
         });
     });

@@ -8,7 +8,35 @@ var owner = 'ElTester',
     creds = {username: 'ElTester', password: 'password123'};
 
 describe('Github Loader Tests', function() {
+
     var loader;
+
+    describe('Basic Tests', function() {
+        before(function() {
+            loader = new GithubLoader(myCreds);
+        });
+        describe('getConcepts', function() {
+            beforeEach(function() {
+                loader.loadedConcepts = {
+                    project: 'manifest file',
+                    simulations: 1,
+                    lj_pair: 2
+                };
+            });
+
+            it('should not return the project manifest file', function() {
+                var results = loader.getConcepts();
+                console.log('results:', results);
+                expect(results.project).toNotExist();
+            });
+
+            it('should return the other files', function() {
+                var results = loader.getConcepts();
+                expect(results.simulations).toExist();
+                expect(results.lj_pair).toExist();
+            });
+        });
+    });
 
     var testGithubFn = function() {
 
@@ -105,8 +133,21 @@ describe('Github Loader Tests', function() {
             loader = new GithubLoader(myCreds);
         });
 
-        testGithubFn();
+        //testGithubFn();
+
+        describe('Additional issues/testing', function() {
+            // retrieve iModelsP1
+            it('should load metamds-p1', function(done) {
+                loader.loadProject('https://github.com/iModels/metamds-p1', function(e) {
+                    expect(e).toNotExist();
+                    console.log('Loaded!');
+                    done();
+                });
+            });
+
+        });
     });
+
     describe('Using username/password', function() {
         before(function() {
             loader = new GithubLoader(creds);
@@ -114,4 +155,5 @@ describe('Github Loader Tests', function() {
 
         testGithubFn();
     });
+
 });

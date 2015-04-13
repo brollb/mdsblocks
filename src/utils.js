@@ -34,10 +34,8 @@
      * @param {String} attribute
      * @return {Function}
      */
-    var getAttribute = function(attribute) {
-        return function(element) {
-            return element[attribute];
-        };
+    var getAttribute = function(element, attribute) {
+        return element[attribute];
     };
 
     var createDictionary = function(keyFn, array) {
@@ -68,8 +66,10 @@
     var removeFileExtension = function(name) {
         var result = filenameRegex.exec(name);
         if (result) {
+            console.log('result is', result[1]);
             return result[1];
         }
+        console.log('result is', name);
         return name;
     };
 
