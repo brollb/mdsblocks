@@ -5,6 +5,17 @@
     var ConceptLoader = function() {
     };
 
+    ConceptLoader.prototype.loadExampleConcepts = function() {
+        var concepts = {},
+            c;
+        for (var i = 20; i--;) {
+            c = this.loadExampleConcept();
+            concepts[c.name+i] = c.content;
+        }
+
+        return concepts;
+    };
+
     ConceptLoader.prototype.loadExampleConcept = function() {
         var yamlFile = 
         'description: "execute a simulation"\n'+
@@ -18,7 +29,7 @@
             '  simulator_executable:\n'+
             '      type: string\n'+
             'required: [target, simulation_script_file_name, simulator_executable]';
-        return {name: 'execute_simulator', content: yaml.load(yamlFile)};
+        return {name: 'execute_simulator', content: yamlFile};
     };
 
     global.ConceptLoader = ConceptLoader;

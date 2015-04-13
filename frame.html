@@ -55,7 +55,9 @@
             blockCreator = new MDSBlockCreator(toolbox);
         
         //var url = prompt('Enter github URL:');
-        loader.loadProject('https://github.com/ElTester/octokatTest', function(err) {
+        var iModelsP1 = 'https://github.com/iModels/metamds-p1',
+            dummyProject = 'https://github.com/ElTester/octokatTest';
+        loader.loadProject('https://github.com/iModels/metamds-p1', function(err) {
             if (err) {
                 console.error(err);
             }

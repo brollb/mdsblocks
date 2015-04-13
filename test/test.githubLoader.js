@@ -74,6 +74,25 @@ describe('Github Loader Tests', function() {
             });
         });
 
+        it('should load project w/ no dependents', function(done) {
+            loader.loadProject('https://github.com/ElTester/mdsP5', function(err) {
+                expect(err).toBe(null);
+
+                expect(loader.loadedConcepts.lj_pair).toNotBe(undefined);
+                done();
+            });
+        });
+
+        it('should support dir paths with github url', function(done) {
+            loader.loadProject('https://github.com/ElTester/mdsP3/tree/master/testDir', function(err) {
+                expect(err).toBe(null);
+
+                expect(loader.loadedConcepts.lj_pair).toNotBe(undefined);
+                expect(loader.loadedConcepts.skip_me).toBe(undefined);
+                done();
+            });
+        });
+
         it.skip('should store blocks by project', function(done) {
         });
 

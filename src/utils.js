@@ -24,7 +24,8 @@
             return false;
         }
         var index = name.lastIndexOf('.');
-        return name.substring(index+1).toLowerCase() === 'yaml';
+        return name.substring(index+1).toLowerCase() === 'yaml' ||
+                name.substring(index+1).toLowerCase() === 'yml' ;
     };
 
     /**
@@ -37,6 +38,25 @@
         return function(element) {
             return element[attribute];
         };
+    };
+
+    var createDictionary = function(keyFn, array) {
+        return array.reduce(function(prev, curr) {
+            prev[keyFn(curr)] = curr;
+            return prev;
+        }, {});
+    };
+
+    var addAttribute = function(attribute, object, value) {
+        object[attribute] = value;
+    };
+
+    var isEmpty = function(array) {
+        return !array.length;
+    };
+
+    var isGithubURL = function(string) {
+        return /https:\/\/?github.com\/[\w-_]+\/[\w-_]+/.test(string);
     };
 
     /**
@@ -56,8 +76,12 @@
     global.Utils = {
         capitalize: capitalize,
         isYamlFile: isYamlFile,
+        isGithubURL: isGithubURL,
         removeFileExtension: removeFileExtension,
-        getAttribute: getAttribute
+        getAttribute: getAttribute,
+        addAttribute: addAttribute,
+        isEmpty: isEmpty,
+        createDictionary: createDictionary
     };
 
 })(this);

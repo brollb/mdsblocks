@@ -34,7 +34,15 @@
      * @return {String} <owner>/<url>
      */
     GithubLoader.prototype._cleanUrl = function(url) {
-        return url.split('github.com/').pop();
+        url = url.split('github.com/').pop();
+
+        if (/[\w\-_]+\/[\w\-_]+\/tree/.test(url)) {
+            url = url.split('/tree').join('');  // Remove '/tree'
+        } else {
+            url += '/master';  // Assume master branch by default
+        }
+
+        return url;
     };
 
     /**
@@ -44,6 +52,11 @@
      * @return {Boolean} isLoaded?
      */
     GithubLoader.prototype.isProjectLoaded = function(url) {
+        // Add branch to url if needed (assuming master)
+        if (url.split('/').length === 2) {
+            url += '/master';
+        }
+
         return !!this.loadedProjects[url];
     };
 
@@ -72,17 +85,26 @@
             data = info.split('/'),
             owner = data.shift(),
             projectName = data.shift(),
+            branch = data.shift(),
+            path = data.join('/'),
+            prependPath,
             project = this._octo.repos(owner, projectName),
             manifest = project.contents(manifestFileName).read();
 
         // Record the project as loaded
         console.log('Loading '+info);
+        if (path !== '') {
+            path = '/' + path;
+        }
         this.loadedProjects[info] = true;
 
         // Retrieve the project.yaml file
         manifest.then(function(result) {
-            var deps = yaml.load(result).path;
+            var deps = yaml.load(result).path || [];
             self.loadedConcepts[Utils.removeFileExtension(manifestFileName)] = result;
+
+            // Remove non-Github paths
+            deps = deps.filter(Utils.isGithubURL);
 
             // Convert urls to project name and remove already loaded projects
             deps = R.map(self._cleanUrl, deps).filter(function(e) {
@@ -94,12 +116,12 @@
                 return self._loadProject.call(self, info, callback);
                 },
                 function(err) {
-                    console.log('Calling callback!');
                     // Load all blocks in the project!
                     // For each .yaml file in the root path, store it as a
                     // concept
                     self._octo.repos(owner, projectName).fetch(function(e, v) {
-                        v.contents('').read().then(function(res) {
+                        console.log('About to read path:', path);
+                        v.contents(path).read().then(function(res) {
                             var files = JSON.parse(res);
                             // Remove all non-yaml files
                             files = R.map(Utils.getAttribute('name'), files).filter(Utils.isYamlFile);
@@ -110,6 +132,13 @@
                                 var conceptName = Utils.removeFileExtension(e);
                                 return !!self.loadedConcepts[conceptName];
                             }, files);
+
+                            // Change the relative paths to include the repo's path used
+                            if (path) {
+                                prependPath = R.partial(R.concat, path.substring(1)+'/');
+                                files = R.map(prependPath, files);
+                                console.log('files are:', files);
+                            }
 
                             // Store remaining concepts
                             var len = files.length;
