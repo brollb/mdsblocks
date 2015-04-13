@@ -56,23 +56,48 @@
         
         // Sort the remaining nodes
         var independents, 
-            orderedNodes = [];
+            orderedNodes = [],
+            node;
+
         while (Object.keys(nodeDict).length) {
-            independents = R.pickBy(Utils.isEmpty, nodeDict);
-            if (!independents.length) {
+            independents = Object.keys(R.pickBy(Utils.isEmpty, nodeDict));
+            console.log('independents:', independents);
+            if (!independents.length) {  // Cycle detected
                 console.error('There is no topological sort for the given blocks!');
                 break;
             }
-            // Pick 
+            // Pick one and remove edges
             while (independents.length) {
+                node = independents.pop();
+                orderedNodes.push(node);
+                nodeDict = this._removeNode(node, nodeDict);
             }
         }
+
+        console.log('Finished!');
+        return orderedNodes;
+    };
+
+    /**
+     * Remove all instances of "node" in the values (arrays) in nodeDict.
+     *
+     * @param {String} node
+     * @param {Dictionary} nodeDict
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype._removeNode = function(node, nodeDict) {
+        var isNode = R.partial(R.eq, node),
+            removeNodeFromDeps = R.partial(R.reject, isNode);
+
+        nodeDict = R.mapObj(removeNodeFromDeps, nodeDict);
+        delete nodeDict[node];
+        return nodeDict;
     };
 
     /**
      * Return a list of nodes where a node has edges to it's dependencies.
      *
-     * @param {Array<Concept>}concepts
+     * @param {Array<Concept>} concepts
      * @return {Array<ConceptNodes>}
      */
     MDSBlockCreator.prototype._createGraph = function(concepts) {

@@ -30,7 +30,6 @@ describe.only('Block creator tests', function() {
                 expect(typeof concept).toBe('object');
             });
 
-            console.log('results:', results[0]);
         });
 
         it('should add name to concept json', function() {
@@ -41,13 +40,69 @@ describe.only('Block creator tests', function() {
                 expect(concept.name).toNotBe(undefined);
             });
 
-            var nodes = blockCreator._sortConcepts(results);
         });
     });
 
     describe('createGraph', function() {
+        it('should return correct number of nodes', function() {
+            var input = loader.loadExampleConcepts(),
+                results = blockCreator.cleanConceptInput(input);
+
+            results.forEach(function(concept) {
+                expect(concept.name).toNotBe(undefined);
+            });
+
+            var nodes = blockCreator._createGraph(results);
+            expect(nodes.length).toBe(Object.keys(input).length);
+        });
         
-        
+        it('should return types for each node', function() {
+            var input = loader.loadExampleConcepts(),
+                results = blockCreator.cleanConceptInput(input);
+
+            results.forEach(function(concept) {
+                expect(concept.name).toNotBe(undefined);
+            });
+
+            var nodes = blockCreator._createGraph(results),
+                primitiveTypes = ['string'];
+
+            nodes.forEach(function(n) {
+                n.forEach(function(d) {
+                    expect(input[d] || primitiveTypes.indexOf(d)).toNotBe(undefined);
+                });
+            });
+        });
     });
 
+    describe('sortConcepts', function() {
+        var input,
+            results;
+
+        beforeEach(function() {
+            input = loader.loadExampleConcepts();
+            results = blockCreator.cleanConceptInput(input);
+        });
+
+        // Helpers
+        var containsString = function(searched, string) {
+            return string.indexOf(searched) > -1;
+        };
+
+        it('should create a list with all previous elements', function() {
+            var nodes = blockCreator._sortConcepts(results);
+            expect(nodes.length).toBe(Object.keys(input).length);
+        });
+
+        it('should be sorted list', function() {
+            var nodes = blockCreator._sortConcepts(results);
+
+            // execute_simulator# should be before sim_user#
+            var exec_nodes = nodes.filter(containsString.bind(null, 'execute_simulator'));
+            exec_nodes.forEach(function(n) {
+                var num = /\d+/.exec(n)[0];
+                expect(nodes.indexOf('sim_user'+num)).toBeGreaterThan(nodes.indexOf(n));
+            });
+        });
+    });
 });
