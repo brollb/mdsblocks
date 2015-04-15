@@ -53,6 +53,10 @@
         return !array.length;
     };
 
+    var contains = function(array, value) {
+        return array.indexOf(value) > -1;
+    };
+
     var isGithubURL = function(string) {
         return /https:\/\/?github.com\/[\w-_]+\/[\w-_]+/.test(string);
     };
@@ -66,10 +70,8 @@
     var removeFileExtension = function(name) {
         var result = filenameRegex.exec(name);
         if (result) {
-            console.log('result is', result[1]);
             return result[1];
         }
-        console.log('result is', name);
         return name;
     };
 
@@ -81,6 +83,7 @@
         getAttribute: getAttribute,
         addAttribute: addAttribute,
         isEmpty: isEmpty,
+        contains: contains,
         createDictionary: createDictionary
     };
 

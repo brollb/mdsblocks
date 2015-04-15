@@ -65,7 +65,7 @@
             var concepts = loader.getConcepts();
             console.log('Loaded concepts:', concepts);
 
-            blockCreator.createBlocks(concepts);
+            blockCreator.createProject(loader.projectConcepts, concepts);
             // Load the example blocks
             //for (var i = concepts.length; i--;) {
                 //blockCreator.createBlock(concepts[i], loader.loadedConcepts[concepts[i]], 'Basic Examples');

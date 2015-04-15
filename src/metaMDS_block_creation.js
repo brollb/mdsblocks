@@ -15,6 +15,7 @@
      */
     var MDSBlockCreator = function(toolbox) {
         this.toolbox = toolbox;
+        this._concepts = {};
     };
 
     MDSBlockCreator.prototype.isMetaConcept = function(concept) {
@@ -121,6 +122,10 @@
         return R.map(R.values, properties);
     };
 
+    MDSBlockCreator.prototype._addToConceptRecord = function(concept) {
+        this._concepts[concept.name] = concept;
+    };
+
     /**
      * Load all provided concepts and create the respective blocks.
      *
@@ -142,6 +147,25 @@
         // Create blocks in the given order!
         var metaConcepts = meta.map(R.partial(Utils.getAttribute, conceptMap)),
             metaBlocks = metaConcepts.map(this._createMetaBlock.bind(this));
+
+        // Add concepts to record for converting blocks to code
+        metaConcepts.forEach(this._addToConceptRecord.bind(this));
+        return instances;
+    };
+
+    MDSBlockCreator.prototype.createProject = function(projectBlockNames, yamlConcepts) {
+        var instances = this.createBlocks(yamlConcepts);
+
+        // Create the current project from projectBlocks names
+        var getConceptName = R.partialRight(Utils.getAttribute, 'name'),
+            isInProject = R.partial(Utils.contains, projectBlockNames);
+
+        instances = R.filter(R.pipe(getConceptName, isInProject), instances);
+
+        // Create the blocks on the workspace
+        setTimeout(function() {
+            instances.forEach(this._createInstanceConcept.bind(this));
+        }.bind(this), 500);
     };
 
     MDSBlockCreator.prototype._cleanName = function(name) {
@@ -173,10 +197,73 @@
         return this._createInstanceBlock(concept);
     };
 
-    MDSBlockCreator.prototype._createInstanceBlock = function(concept) {
-        // Contains a single key. This key tells the block to create.
-        // Then we will connect the appropriate blocks to the inputs ('properties')
-        // TODO
+    /**
+     * Create the corresponding blocks for an "instance concept"
+     *
+     * @param {Concept} concept
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype._createInstanceConcept = function(instance) {
+        var type = R.reject(R.partial(R.eq, 'name'), Object.keys(instance))[0],
+            concept = this._concepts[type],
+            mainBlock,
+            values,
+            child;
+
+        // Hack
+        if (!concept) {
+            console.error('Unsupported type:', instance);
+            // Return a 'string' block for now
+            if (typeof instance !== 'object') {
+                mainBlock = Blockly.Block.obtain(Blockly.getMainWorkspace(), 'text');
+                mainBlock.initSvg();
+                mainBlock.render();
+                mainBlock.setFieldValue(instance.toString(), 'TEXT');
+            }
+            return mainBlock;
+        }
+
+        mainBlock = Blockly.Block.obtain(Blockly.getMainWorkspace(), concept.name);
+        values = Object.keys(instance[type]);
+        child;
+
+        mainBlock.initSvg();
+        mainBlock.render();
+
+        // Connect value attributes
+        var block, children, i,
+            outputConnection, inputConnection, childBlock;
+        values.forEach(function(v) {
+            // Connect the first statement
+            block = mainBlock;
+            children = 
+                (instance[type][v] instanceof Array ? instance[type][v] : [instance[type][v]])
+                    .slice();
+            i = 0;
+
+            // Connect the first one to the appropriate connection
+            outputConnection = block.getInput(v).connection;
+            childBlock = this._createInstanceConcept(children[i++]);
+            if (childBlock) {
+                inputConnection = childBlock.previousConnection || childBlock.outputConnection;
+                outputConnection.connect(inputConnection);
+                block = childBlock;
+            }
+
+            while (i < children.length) {
+                childBlock = this._createInstanceConcept(children[i++]);
+                if (childBlock) {
+                    inputConnection = childBlock.previousConnection;
+                    outputConnection = block.nextConnection;
+                    outputConnection.connect(inputConnection);
+                }
+
+                // Step forward...
+                block = childBlock;
+            }
+        },this);
+
+        return mainBlock;
     };
 
     /**
@@ -186,7 +273,7 @@
      * @return {undefined}
      */
     MDSBlockCreator.prototype._createMetaBlock = function(concept) {
-        console.log('Creating Meta Block. Concept is', concept);
+        console.log('Creating Block for ', concept.name);
         var name = Utils.capitalize(concept.name);
         var init= function() {
             this.setTooltip(concept.description);
@@ -203,6 +290,12 @@
                 type,
                 input;
 
+            // Add name
+            var formattedName = concept.name.split('_').reduce(function(p,c) {
+                return p+Utils.capitalize(c)+' ';
+            }, '');
+
+            this.appendDummyInput().appendField(formattedName);
             for (var i = 0; i < properties.length; i++) {  // Order may be more intuitive
 
                 displayName = properties[i].replace(/_/g, ' ');
@@ -237,8 +330,8 @@
             this.setColour(Math.random()*360);
         };
 
-        this._addBlock(name, 'Basic Examples');
-        return Blockly.Blocks[name] = {init: init};
+        this._addBlock(concept.name, 'Basic Examples');
+        return Blockly.Blocks[concept.name] = {init: init};
 
         // Add the block to the toolbox
         //return {init: init};

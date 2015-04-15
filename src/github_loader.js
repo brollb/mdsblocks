@@ -13,6 +13,8 @@
         console.log('Using '+(auth || oauth));
         this._octo = new Octokat(auth || oauth);
 
+        this.currentProject = null;
+        this.projectConcepts = [];
         this._manifestFileName = 'project.yaml';  // Accessible for testing
         this.loadedConcepts = {};  // yaml files stored by id
     };
@@ -24,7 +26,8 @@
      */
     GithubLoader.prototype.loadProject = function(url, callback) {
         this.loadedProjects = {};
-        this._loadProject(this._cleanUrl(url), callback);
+        this.currentProject = this._cleanUrl(url);
+        this._loadProject(this.currentProject, callback);
     };
 
     /**
@@ -152,6 +155,9 @@
                                     var contents = v.contents(file).read();
                                     contents.then(function(result) {
                                         self.loadedConcepts[Utils.removeFileExtension(file)] = result;
+                                        if (self.currentProject === info) {
+                                            self.projectConcepts.push(Utils.removeFileExtension(file));
+                                        }
                                         if (--len === 0) {
                                             callback(null);
                                         }
