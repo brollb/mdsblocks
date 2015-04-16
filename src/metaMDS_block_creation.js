@@ -4,7 +4,12 @@
  */
 (function(global) {
     'use strict';
-    var count = 0;
+    var count = 0,
+        PRIMITIVES = [
+            [ /\.*/, 'text', 'TEXT' ],
+            [ /\d*\.\d+/, 'math_number', 'NUM' ],  // Float
+            [ /\d+/, 'math_number', 'NUM' ]  // Integer
+        ];
 
     /**
      * MDSBlockCreator
@@ -198,6 +203,35 @@
     };
 
     /**
+     * Create a primitive block type such as String, Integer, Double, etc.
+     *
+     * @param instance
+     * @return {Block}
+     */
+    MDSBlockCreator.prototype._createPrimitiveBlock = function(instance) {
+        var mainBlock;
+        if (typeof instance !== 'object') {
+            // Find the primitive type
+            var i = PRIMITIVES.length,
+                primitive;
+
+            while (i-- && !primitive) {
+                if (PRIMITIVES[i][0].test(instance)) {
+                    primitive = PRIMITIVES[i];
+                }
+            }
+
+            mainBlock = Blockly.Block.obtain(Blockly.getMainWorkspace(), primitive[1]);
+            mainBlock.initSvg();
+            mainBlock.render();
+            mainBlock.setFieldValue(instance.toString(), primitive[2]);
+        } else {
+            console.error('Unsupported type:', instance);
+        }
+        return mainBlock;
+    };
+
+    /**
      * Create the corresponding blocks for an "instance concept"
      *
      * @param {Concept} concept
@@ -212,20 +246,12 @@
 
         // Hack
         if (!concept) {
-            console.error('Unsupported type:', instance);
             // Return a 'string' block for now
-            if (typeof instance !== 'object') {
-                mainBlock = Blockly.Block.obtain(Blockly.getMainWorkspace(), 'text');
-                mainBlock.initSvg();
-                mainBlock.render();
-                mainBlock.setFieldValue(instance.toString(), 'TEXT');
-            }
-            return mainBlock;
+            return this._createPrimitiveBlock(instance);
         }
 
         mainBlock = Blockly.Block.obtain(Blockly.getMainWorkspace(), concept.name);
         values = Object.keys(instance[type]);
-        child;
 
         mainBlock.initSvg();
         mainBlock.render();
