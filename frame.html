@@ -5,6 +5,9 @@
     <script src="blockly/blockly_uncompressed.js"></script>
     <script src="blockly/blocks_compressed.js"></script>
     <script src="blockly/msg/js/en.js"></script>
+    <script src="blockly/generators/python.js"></script>
+    <script src="blockly/generators/python/text.js"></script>
+    <script src="blockly/generators/python/math.js"></script>
     <script src="src/lib/yaml.min.js"></script>
     <script src="src/lib/ramda.min.js"></script>
     <script src="src/lib/async.js"></script>
@@ -34,6 +37,42 @@
 
           initGithubConcepts(toolbox, function() {
           });
+
+          // Set up click listener for the button
+            (function(console) {
+
+                console.save = function(data, filename) {
+
+                    if (!data) {
+                        console.error('Console.save: No data');
+                        return;
+                    }
+
+                    if (!filename) {
+                        filename = 'console.json';
+                    }
+
+                    if (typeof data === 'object') {
+                        data = JSON.stringify(data, undefined, 4);
+                    }
+
+                    var blob = new Blob([data], {type: 'text/json'}),
+                    e = document.createEvent('MouseEvents'),
+                    a = document.createElement('a');
+
+                    a.download = filename;
+                    a.href = window.URL.createObjectURL(blob);
+                    a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':');
+                    e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+                    a.dispatchEvent(e);
+                    self.readyToDownload = false;
+                };
+            })(console);
+
+      }
+
+      function downloadWorkspaceCode() {
+          console.save(Blockly.Python.workspaceToCode(), 'GeneratedYaml.yaml');
       }
 
       function initBasicConcepts(toolbox) {
@@ -54,7 +93,6 @@
         var loader = new GithubLoader(),
             blockCreator = new MDSBlockCreator(toolbox);
         
-        //var url = prompt('Enter github URL:');
         var iModelsP1 = 'https://github.com/iModels/metamds-p1',
             dummyProject = 'https://github.com/ElTester/octokatTest';
         loader.loadProject('https://github.com/iModels/metamds-p1', function(err) {
@@ -66,10 +104,6 @@
             console.log('Loaded concepts:', concepts);
 
             blockCreator.createProject(loader.projectConcepts, concepts);
-            // Load the example blocks
-            //for (var i = concepts.length; i--;) {
-                //blockCreator.createBlock(concepts[i], loader.loadedConcepts[concepts[i]], 'Basic Examples');
-            //}
             initializeBlockly(toolbox);
         });
       }
@@ -97,4 +131,6 @@
       <!--</category>-->
     </xml>
   </body>
+  <!-- Download button -->
+  <button onclick="downloadWorkspaceCode()" id="generateButton" type="button">Generate YAML!</button>
 </html>

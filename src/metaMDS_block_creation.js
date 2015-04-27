@@ -23,10 +23,22 @@
         this._concepts = {};
     };
 
+    /**
+     * Check if a block is the definition of a concept type.
+     *
+     * @param concept
+     * @return {undefined}
+     */
     MDSBlockCreator.prototype.isMetaConcept = function(concept) {
         return R.has('description', concept) && R.has('properties', concept);
     };
 
+    /**
+     * Create JSON from YAML and add concept name to the concept JSON.
+     *
+     * @param {Dictionary} yamlConcepts
+     * @return {Dictionary} concepts
+     */
     MDSBlockCreator.prototype.cleanConceptInput = function(yamlConcepts) {
         // Create JSON from yamlConcepts
         var concepts = R.mapObj(yaml.load, yamlConcepts);
@@ -98,7 +110,7 @@
      *
      * @param {String} node
      * @param {Dictionary} nodeDict
-     * @return {undefined}
+     * @return {Dictionary} nodeDict
      */
     MDSBlockCreator.prototype._removeNode = function(node, nodeDict) {
         var isNode = R.partial(R.eq, node),
@@ -158,6 +170,13 @@
         return instances;
     };
 
+    /**
+     * Create the blocks for a given project.
+     *
+     * @param {Array<String>} projectBlockNames
+     * @param {Dictionary} yamlConcepts
+     * @return {undefined}
+     */
     MDSBlockCreator.prototype.createProject = function(projectBlockNames, yamlConcepts) {
         var instances = this.createBlocks(yamlConcepts);
 
@@ -177,35 +196,31 @@
         return /[\w\.\-_]+$/.exec(name)[0];
     };
 
-    MDSBlockCreator.prototype.createBlock = function(name, yamlContent, category) {
-        var concept = yaml.load(yamlContent);
+    //MDSBlockCreator.prototype.createBlock = function(name, yamlContent, category) {
+        //var concept = yaml.load(yamlContent);
 
-        concept.name = this._cleanName(name);  // Remove the filename from the path
+        //concept.name = this._cleanName(name);  // Remove the filename from the path
 
-        // Create the block from the concept json
-        Blockly.Blocks[name] = this._createGenericBlock(concept);
+        //// Create the block from the concept json
+        //Blockly.Blocks[name] = this._createGenericBlock(concept);
 
-        // Add the block to the toolbox
-        this._addBlock(name, category);
-    };
+        //// Add the block to the toolbox
+        //this._addBlock(name, category);
+    //};
 
-    MDSBlockCreator.prototype.renderBlocks = function() {
-        // TODO
-    };
+    //MDSBlockCreator.prototype._createGenericBlock = function(concept) {
+        //// Divide the concepts based on a couple basic block types
+        //if (this.isMetaConcept(concept)) {
+            //return this._createMetaBlock(concept);
+        //}
 
-    MDSBlockCreator.prototype._createGenericBlock = function(concept) {
-        // Divide the concepts based on a couple basic block types
-        if (this.isMetaConcept(concept)) {
-            return this._createMetaBlock(concept);
-        }
-
-        return this._createInstanceBlock(concept);
-    };
+        //return this._createInstanceBlock(concept);
+    //};
 
     /**
      * Create a primitive block type such as String, Integer, Double, etc.
      *
-     * @param instance
+     * @param {Primitive} instance
      * @return {Block}
      */
     MDSBlockCreator.prototype._createPrimitiveBlock = function(instance) {
@@ -295,8 +310,8 @@
     /**
      * Create the input for the blockly blocks.
      *
-     * @param concept
-     * @return {undefined}
+     * @param {Concept} concept
+     * @return {Block}
      */
     MDSBlockCreator.prototype._createMetaBlock = function(concept) {
         console.log('Creating Block for ', concept.name);
@@ -345,25 +360,48 @@
                 }
             }
 
-            // Handle the required input?
-            // TODO 
-            // Set the output?
-            // TODO
-
-            // Set the color intelligently? Perhaps based on the output...
-            // TODO
-
             this.setColour(Math.random()*360);
         };
 
         this._addBlock(concept.name, 'Basic Examples');
-        return Blockly.Blocks[concept.name] = {init: init};
+        this._createCodeGenerator(concept);
 
-        // Add the block to the toolbox
-        //return {init: init};
+        return Blockly.Blocks[concept.name] = {init: init};
     };
 
-    //MDSBlockCreator.prototype._addFieldToBlock = function(id, category)
+    /**
+     * Create the code generating function for the given block.
+     *
+     * @param {Concept} concept
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype._createCodeGenerator = function(concept) {
+        Blockly.Python[concept.name] = this._getCodeFunction.bind(this, concept);
+    };
+
+    /**
+     * Create the code given the fields.
+     *
+     * @param {Dictionary<name --> type>} fields
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype._getCodeFunction = function(concept, block) {
+        // For each property, check if it is a list type
+        var fields = concept.properties,
+            names = Object.keys(fields),
+            type,
+            code = concept.name+':\n';
+
+        for (var i = 0; i < names.length; i++) {
+            type = fields[names[i]].type;
+            if (type === 'list') {
+                code += Blockly.Python.statementToCode(block, names[i]);
+            } else {
+                code += '  '+names[i]+': '+(Blockly.Python.valueToCode(block, names[i], Blockly.Python.ORDER_NONE) || '')+ '\n';
+            }
+        }
+        return code;
+    };
 
     /**
      * Add a block with the given id to the toolbox.
