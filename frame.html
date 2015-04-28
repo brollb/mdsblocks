@@ -2,12 +2,17 @@
 <html>
   <head>
     <meta charset="utf-8">
+
     <script src="blockly/blockly_uncompressed.js"></script>
     <script src="blockly/blocks_compressed.js"></script>
     <script src="blockly/msg/js/en.js"></script>
     <script src="blockly/generators/python.js"></script>
     <script src="blockly/generators/python/text.js"></script>
     <script src="blockly/generators/python/math.js"></script>
+    
+    <!-- Hiding my oauth token -->
+    <script src="src/oauth_token.js"></script>
+
     <script src="src/lib/yaml.min.js"></script>
     <script src="src/lib/ramda.min.js"></script>
     <script src="src/lib/async.js"></script>
@@ -90,7 +95,7 @@
 
       function initGithubConcepts(toolbox) {
         // Access github and load the blocks
-        var loader = new GithubLoader(),
+        var loader = new GithubLoader({token: OAUTH_TOKEN}),
             blockCreator = new MDSBlockCreator(toolbox);
         
         var iModelsP1 = 'https://github.com/iModels/metamds-p1',

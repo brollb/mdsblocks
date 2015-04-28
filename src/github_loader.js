@@ -7,11 +7,9 @@
     'use strict';
 
     var manifestFileName = 'project.yaml';
-    var oauth = {token:'db536deb6c4d8a9ae48a936be26d79e4839e9515'};  // REMOVE
 
     var GithubLoader = function(auth) {
-        console.log('Using '+(auth || oauth));
-        this._octo = new Octokat(auth || oauth);
+        this._octo = new Octokat(auth);
 
         this.currentProject = null;
         this.projectConcepts = [];

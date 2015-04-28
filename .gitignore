@@ -2,3 +2,4 @@ node_modules/
 *.swp
 *.swo
 *~
+oauth_token.js
