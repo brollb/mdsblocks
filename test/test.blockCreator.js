@@ -107,7 +107,7 @@ describe('Block creator tests', function() {
         });
 
         describe('createBlocks', function() {
-            it.only('should be ordered', function() {
+            it('should be ordered', function() {
                 blockCreator.createBlocks(input);
             });
         });

@@ -390,15 +390,19 @@
         var fields = concept.properties,
             names = Object.keys(fields),
             type,
+            snippet,
             code = concept.name+':\n';
 
         for (var i = 0; i < names.length; i++) {
             type = fields[names[i]].type;
             if (type === 'list') {
-                code += Blockly.Python.statementToCode(block, names[i]);
+                snippet = Blockly.Python.statementToCode(block, names[i]);
+                // Convert the snippet into YAML array format
+                snippet = '\n'+Utils.yamlListToArray(snippet);
             } else {
-                code += '  '+names[i]+': '+(Blockly.Python.valueToCode(block, names[i], Blockly.Python.ORDER_NONE) || '')+ '\n';
+                snippet = (Blockly.Python.valueToCode(block, names[i], Blockly.Python.ORDER_NONE) || '');
             }
+            code += '  '+names[i]+':'+snippet+'\n';
         }
         return code;
     };

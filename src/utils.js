@@ -75,6 +75,41 @@
         return name;
     };
 
+    /**
+     * Get the indent level in terms of number of spaces.
+     *
+     * @param {String} y
+     * @return {Number}
+     */
+    var getIndentLevel = function(y) {
+        return /^\s*/.exec(y)[0].length;
+    };
+
+    /**
+     * Convert concatenated yaml concepts to a yaml array (list).
+     *
+     * @param {String} y
+     * @return {String}
+     */
+    var yamlListToArray = function(y) {
+        // Assume that the first white space is the default indent
+        var baseLevel = getIndentLevel(y),
+            lines = y.split('\n'),
+            r = /^\s*/,
+            indent = new Array(baseLevel+1).join(' '),
+            ws;
+
+        for (var i = 0; i < lines.length-1; i++) {
+            if (getIndentLevel(lines[i]) === baseLevel) {  // doesn't start with indent
+                ws = r.exec(lines[i]);
+                lines[i] = indent + '- '+lines[i].substring(baseLevel);
+            } else {
+                lines[i] = '  '+lines[i];
+            }
+        }
+        return lines.join('\n');
+    };
+
     global.Utils = {
         capitalize: capitalize,
         isYamlFile: isYamlFile,
@@ -84,7 +119,8 @@
         addAttribute: addAttribute,
         isEmpty: isEmpty,
         contains: contains,
-        createDictionary: createDictionary
+        createDictionary: createDictionary,
+        yamlListToArray: yamlListToArray 
     };
 
 })(this);
