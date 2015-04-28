@@ -402,7 +402,7 @@
             } else {
                 snippet = (Blockly.Python.valueToCode(block, names[i], Blockly.Python.ORDER_NONE) || '');
             }
-            code += '  '+names[i]+':'+snippet+'\n';
+            code += '  '+names[i]+': '+snippet+'\n';
         }
         return code;
     };
