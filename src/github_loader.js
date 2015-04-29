@@ -29,6 +29,17 @@
     };
 
     /**
+     * Save the files to the given project.
+     *
+     * @param {Github URL} url
+     * @param {Dictionary<Name, Content>} files
+     * @return {undefined}
+     */
+    GithubLoader.prototype.saveProject = function(url, files) {
+        // TODO
+    };
+
+    /**
      * Extract the OWNER/PROJECT string from a URL
      *
      * @param {String} url
@@ -155,6 +166,7 @@
                                         self.loadedConcepts[Utils.removeFileExtension(file)] = result;
                                         if (self.currentProject === info) {
                                             self.projectConcepts.push(Utils.removeFileExtension(file));
+                                            // TODO: Add the file relative path
                                         }
                                         if (--len === 0) {
                                             callback(null);

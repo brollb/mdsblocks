@@ -23,6 +23,14 @@
     <script src="src/concept_loader.js"></script>
     <script src="src/github_loader.js"></script>
     <script src="src/lib/example_concepts/yaml_concepts.js"></script>
+    <script src="//code.jquery.com/jquery-2.1.3.js"></script>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/roboto.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/material-fullpalette.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/ripples.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/js/ripples.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/6.2.0/jquery.nouislider.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/js/material.min.js"></script>
     <style>
       html, body {
         background-color: #fff;
@@ -40,8 +48,7 @@
       function init() {
           var toolbox = document.getElementById('toolbox');
 
-          initGithubConcepts(toolbox, function() {
-          });
+          initGithubConcepts(toolbox);
 
           // Set up click listener for the button
             (function(console) {
@@ -80,41 +87,31 @@
           console.save(Blockly.Python.workspaceToCode(), 'GeneratedYaml.yaml');
       }
 
-      function initBasicConcepts(toolbox) {
-        // Access github and load the blocks
-        var loader = new ConceptLoader(),
-            blockCreator = new MDSBlockCreator(toolbox);
-        
-        console.log('loading '+testFiles.length+' blocks');
-        // Load the example blocks
-        for (var i = testFiles.length; i--;) {
-            blockCreator.createBlock(testFiles[i].name, testFiles[i].content, 'Basic Examples');
-        }
-        initializeBlockly(toolbox);
-      }
-
       function initGithubConcepts(toolbox) {
         // Access github and load the blocks
         var loader = new GithubLoader({token: OAUTH_TOKEN}),
-            blockCreator = new MDSBlockCreator(toolbox);
+            wkspCtnr = document.getElementById('workspace-container'),
+            tagCtnr = document.getElementById('tag-container'),
+            blockCreator = new MDSBlockCreator(toolbox, wkspCtnr, tagCtnr);
         
-        var iModelsP1 = 'https://github.com/iModels/metamds-p1',
-            dummyProject = 'https://github.com/ElTester/octokatTest';
+        // TODO: Create a UI for selecting a project
+
         loader.loadProject('https://github.com/iModels/metamds-p1', function(err) {
             if (err) {
                 console.error(err);
             }
+
             // Create blocks for each concept
             var concepts = loader.getConcepts();
-            console.log('Loaded concepts:', concepts);
-
             blockCreator.createProject(loader.projectConcepts, concepts);
+
+            // Create the toolbox!
             initializeBlockly(toolbox);
         });
       }
 
       function initializeBlockly(toolbox) {
-        Blockly.inject(document.body,
+        Blockly.inject(document.getElementById('toolbox-container'),
             {toolbox: toolbox});
         // Let the top-level application know that Blockly is ready.
         window.parent.blocklyLoaded(Blockly);
@@ -122,20 +119,24 @@
     </script>
   </head>
   <body onload="init()">
-    <xml id="toolbox" style="display: none">
-      <!--<category name="Standard Blocks">-->
-          <!--<block type="controls_if"></block>-->
-          <!--<block type="logic_compare"></block>-->
-          <!--<block type="controls_repeat_ext"></block>-->
-          <!--<block type="math_number"></block>-->
-          <!--<block type="math_arithmetic"></block>-->
-          <!--<block type="text"></block>-->
-          <!--<block type="text_print"></block>-->
-      <!--</category>-->
-      <!--<category name="Basic Examples">-->
-      <!--</category>-->
-    </xml>
+      <div id="workspace-container" class="btn-group btn-group-justified">
+          <a href="javascript:void(0)" class="btn btn-default">Loading...</a>
+          <!-- FIXME -->
+      </div>
+      <div class="container-fluid" style="height:90%">
+      <div class="row" style="height:100%">
+          <div id="tag-container" class="btn-group-vertical col-md-1">
+              <a href="javascript:void(0)" class="btn btn-default">Loading...</a>
+          </div>
+          <div class="col-md-10" id="toolbox-container" style="height:100%"></div><!-- FIXME -->
+      </div>
+      </div>
+    <xml id="toolbox" style="display: none"></xml>
+    <div id="tag-container"></div>
+    <div class="pull-right">
+        <a onclick="downloadWorkspaceCode()" href="javascript:void(0)" class="btn btn-success">Download YAML</a>
+        <a href="javascript:void(0)" class="btn btn-success">Save</a>
+    </div>
   </body>
   <!-- Download button -->
-  <button onclick="downloadWorkspaceCode()" id="generateButton" type="button">Generate YAML!</button>
 </html>

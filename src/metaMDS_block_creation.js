@@ -1,15 +1,20 @@
-/*globals R,Utils,Blockly,yaml*/
+/*globals prompt,R,Utils,Blockly,yaml*/
 /*
  * The MDSBlockCreator takes a concept JSON file and creates a blockly code block from it.
  */
 (function(global) {
     'use strict';
+
     var count = 0,
         PRIMITIVES = [
+            /* [ REGEX_PATTERN, BLOCK_NAME, BLOCK_FIELD_NAME ]*/
             [ /\.*/, 'text', 'TEXT' ],
             [ /\d*\.\d+/, 'math_number', 'NUM' ],  // Float
             [ /\d+/, 'math_number', 'NUM' ]  // Integer
-        ];
+        ],
+        ALL_BLOCKS = 'All',
+        SELECTED_CLASS = {TAG: 'btn btn-info', WORKSPACE: 'btn btn-info'},
+        DEFAULT_CLASS = {TAG: 'btn btn-default', WORKSPACE: 'btn btn-default'};
 
     /**
      * MDSBlockCreator
@@ -18,9 +23,24 @@
      * @param {DOM Element} toolbox
      * @return {undefined}
      */
-    var MDSBlockCreator = function(toolbox) {
+    var MDSBlockCreator = function(toolbox, workspaces, tags) {
         this.toolbox = toolbox;
+        this.workspaceContainer = workspaces;
+        this.tagContainer = tags;
+
+        this.initialize();
+    };
+
+    MDSBlockCreator.prototype.initialize = function() {
         this._concepts = {};
+
+        this.workspaces = {};
+        this.currentWorkspace = null;
+        this.workspaceBtns = {};
+
+        this.tags = {};
+        this.activeTags = [];
+        this.tagButtons = {};
     };
 
     /**
@@ -178,7 +198,17 @@
      * @return {undefined}
      */
     MDSBlockCreator.prototype.createProject = function(projectBlockNames, yamlConcepts) {
-        var instances = this.createBlocks(yamlConcepts);
+        var instances;
+
+        // Empty old dom stuff
+        $(this.tagContainer).empty();
+        $(this.workspaceContainer).empty();
+
+        // initialize project stuff
+        this.initialize();
+
+        // Create things!
+        instances = this.createBlocks(yamlConcepts);
 
         // Create the current project from projectBlocks names
         var getConceptName = R.partialRight(Utils.getAttribute, 'name'),
@@ -188,34 +218,16 @@
 
         // Create the blocks on the workspace
         setTimeout(function() {
-            instances.forEach(this._createInstanceConcept.bind(this));
+            // Create the project tabs
+            this._initializeWorkspaces(instances);
         }.bind(this), 500);
+
+        this._toggleTag(ALL_BLOCKS);
     };
 
     MDSBlockCreator.prototype._cleanName = function(name) {
         return /[\w\.\-_]+$/.exec(name)[0];
     };
-
-    //MDSBlockCreator.prototype.createBlock = function(name, yamlContent, category) {
-        //var concept = yaml.load(yamlContent);
-
-        //concept.name = this._cleanName(name);  // Remove the filename from the path
-
-        //// Create the block from the concept json
-        //Blockly.Blocks[name] = this._createGenericBlock(concept);
-
-        //// Add the block to the toolbox
-        //this._addBlock(name, category);
-    //};
-
-    //MDSBlockCreator.prototype._createGenericBlock = function(concept) {
-        //// Divide the concepts based on a couple basic block types
-        //if (this.isMetaConcept(concept)) {
-            //return this._createMetaBlock(concept);
-        //}
-
-        //return this._createInstanceBlock(concept);
-    //};
 
     /**
      * Create a primitive block type such as String, Integer, Double, etc.
@@ -366,8 +378,148 @@
         this._addBlock(concept.name, 'Basic Examples');
         this._createCodeGenerator(concept);
 
-        return Blockly.Blocks[concept.name] = {init: init};
+        // Record tags
+        concept.tags = concept.tags || [];
+        concept.tags.forEach(this._registerConceptWithTag.bind(this, concept));
+        this._registerConceptWithTag(concept, ALL_BLOCKS);
+
+        return Blockly.Blocks[concept.name] = {init: init};  // jshint ignore: line
     };
+
+    /* * * * * * * * * * * Workspaces * * * * * * * * * * */
+
+    MDSBlockCreator.prototype._initializeWorkspaces = function(instances) {
+        // Add the workspaces
+        instances.forEach(function(i) {
+            this.workspaces[i.name] = i;
+
+            // Create HTML
+            this._createWorkspaceButton(i.name);
+            
+        }, this);
+
+        if (instances.length) {
+            this.currentWorkspace = instances[0].name;
+            this._populateWorkspace(instances[0].name);
+        }
+
+        // Add new button
+        var btn = document.createElement('a');
+        btn.setAttribute('class', DEFAULT_CLASS.WORKSPACE);
+        btn.innerHTML = 'Create new...';
+        btn.onclick = this._createNewWorkspace.bind(this, btn);
+        this.workspaceContainer.appendChild(btn);
+    };
+
+    MDSBlockCreator.prototype._createWorkspaceButton = function(wksp, beforeBtn) {
+        var btn = document.createElement('a');
+        btn.setAttribute('class', DEFAULT_CLASS.WORKSPACE);
+        btn.innerHTML = wksp;
+        btn.onclick = this._populateWorkspace.bind(this, wksp);
+
+        this.workspaceBtns[wksp] = btn;
+        if (beforeBtn) {
+            this.workspaceContainer.insertBefore(btn, beforeBtn);
+        } else {
+            this.workspaceContainer.appendChild(btn);
+        }
+
+        return btn;
+    };
+
+    /**
+     * Populate the workspace with an instance block
+     *
+     * @param {String} name
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype._populateWorkspace = function(name) {
+        // Store the old info?
+        // TODO
+
+        // Empty the workspace
+        Blockly.mainWorkspace.clear();
+        this.workspaceBtns[this.currentWorkspace].setAttribute('class', DEFAULT_CLASS.WORKSPACE);
+
+        this.currentWorkspace = name;
+        this.workspaceBtns[name].setAttribute('class', SELECTED_CLASS.WORKSPACE);
+        this._createInstanceConcept(this.workspaces[name]);
+    };
+
+    MDSBlockCreator.prototype._createNewWorkspace = function(newButton) {
+        var name = prompt('Enter the name for the new project', 'My New Project');
+        while (!name || this.workspaces[name]) {  // Validate the name
+            name = prompt('Enter the name for the new project', name);
+        }
+
+        // Create the workspace!
+        this.workspaces[name] = {};
+        this._createWorkspaceButton(name, newButton);
+    };
+
+    /* * * * * * * * * * * END Workspaces * * * * * * * * * * */
+
+    /* * * * * * * * * * * TAGS * * * * * * * * * * */
+
+    /**
+     * Register the concept with the given tag
+     *
+     * @param concept
+     * @param tag
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype._registerConceptWithTag = function(concept, tag) {
+        if (!this.tags[tag]) {
+            // Create the UI element
+            this._createTag(tag);
+        }
+
+        this.tags[tag].push(concept.name);
+    };
+
+    MDSBlockCreator.prototype._createTag = function(tag) {
+        var t = this._createTagButton(tag);
+        this.tagContainer.appendChild(t);
+        this.tags[tag] = [];
+        this.tagButtons[tag] = t;
+    };
+
+    /**
+     * Create the UI component of the tag
+     *
+     * @param {String} tag
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype._createTagButton = function(tag) {
+        var btn = document.createElement('a');
+        btn.setAttribute('class', DEFAULT_CLASS.TAG);
+        btn.innerHTML = tag;
+        btn.onclick = this._toggleTag.bind(this, tag);
+        
+        return btn;
+    };
+
+    /**
+     * Toggle the given tag and update the blocks.
+     *
+     * @param {String} tag
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype._toggleTag = function(tag) {
+        var i = this.activeTags.indexOf(tag);
+
+        console.log('Toggling tag: "'+tag+'"');
+        if (i > -1 && this.activeTags.length > 1) {
+            this.activeTags.splice(i, 1);
+            this.tagButtons[tag].setAttribute('class', DEFAULT_CLASS.TAG);
+        } else {
+            this.activeTags.push(tag);
+            this.tagButtons[tag].setAttribute('class', SELECTED_CLASS.TAG);
+        }
+
+        this._updateBlockToolbox();
+    };
+    /* * * * * * * * * * * END TAGS * * * * * * * * * * */
 
     /**
      * Create the code generating function for the given block.
@@ -419,6 +571,9 @@
         block.setAttribute('type', id);
 
 
+        // Add blocks by the tags
+        // TODO
+
         // Find the correct category using BFS
         var current = [this.toolbox],
             node,
@@ -445,6 +600,10 @@
         }
 
         node.appendChild(block);
+    };
+
+    MDSBlockCreator.prototype._updateBlockToolbox = function() {
+        // TODO
     };
 
     global.MDSBlockCreator = MDSBlockCreator;
