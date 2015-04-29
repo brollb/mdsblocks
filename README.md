@@ -1,9 +1,32 @@
-# Blockly-Concepts
+# `Blockly-Concepts`
 This contains my blockly-concepts integration for metamds
 
+# Project structure:
+    + concepts/
+        + Block definitions
+    + code/
+        + Instances of simulations, etc
+    + project.yaml
+
 ## To Do:
-+ Write to Github
++ Write to `Github`
+    + How should the projects be saved?
+      + Should we save on a workspace-basis?
+        + This might be the most straight forward
+        + We need to figure out the workspace path...
+          + The Github loader can store the path info from github on load
+    + We should save a workspace at a time. Each workspace is one instantiated root block and creates a single yaml file
+
+    + We should create a `MDSProject` object which has both a Github interface and a BlockCreator. When the `Save` button is clicked, it should save the projects to `Github`. 
+        + The BlockCreator will need to keep track of the current projects.
+
+    + Should each project be a namespace?
+
++ What should we do with multiple blocks?
+
 + Tags for blocks
+    + Test this with multiple blocks and tags
+
 + Text view of the blocks
     + diffs
     + class inheritance
@@ -43,6 +66,11 @@ This contains my blockly-concepts integration for metamds
     + Adding to python language
     + Create the code generation while creating the blocks?
     + DONE
+
++ Projects
+    + Should persist
+        + DONE
+
 
 ## Questions
 + How can I tell a block's output? That is, how do I tell if it should be a statement or a value?

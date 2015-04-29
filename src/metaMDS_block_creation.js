@@ -399,7 +399,6 @@
         }, this);
 
         if (instances.length) {
-            this.currentWorkspace = instances[0].name;
             this._populateWorkspace(instances[0].name);
         }
 
@@ -434,27 +433,42 @@
      * @return {undefined}
      */
     MDSBlockCreator.prototype._populateWorkspace = function(name) {
-        // Store the old info?
-        // TODO
+        // Cleanly exit the current workspace if necessary
+        if (this.currentWorkspace) {
+            // Store the old info
+            try {
+                var serialized = Blockly.Python.workspaceToCode();
+                this.workspaces[this.currentWorkspace] = yaml.load(serialized);
+            } catch (e) {
+                console.error('Could not save changes to '+this.currentWorkspace, e);
+            }
 
-        // Empty the workspace
-        Blockly.mainWorkspace.clear();
-        this.workspaceBtns[this.currentWorkspace].setAttribute('class', DEFAULT_CLASS.WORKSPACE);
+            // Empty the workspace
+            Blockly.mainWorkspace.clear();
+            this.workspaceBtns[this.currentWorkspace].setAttribute('class', DEFAULT_CLASS.WORKSPACE);
+        }
 
+        // Update the workspace
         this.currentWorkspace = name;
         this.workspaceBtns[name].setAttribute('class', SELECTED_CLASS.WORKSPACE);
-        this._createInstanceConcept(this.workspaces[name]);
+
+        // Populate the workspace if necessary
+        if (this.workspaces[name]) {
+            this._createInstanceConcept(this.workspaces[name]);
+        }
     };
 
     MDSBlockCreator.prototype._createNewWorkspace = function(newButton) {
         var name = prompt('Enter the name for the new project', 'My New Project');
-        while (!name || this.workspaces[name]) {  // Validate the name
+        while (name && this.workspaces[name] !== undefined) {  // TODO: Validate the name
             name = prompt('Enter the name for the new project', name);
         }
 
         // Create the workspace!
-        this.workspaces[name] = {};
-        this._createWorkspaceButton(name, newButton);
+        if (name) {
+            this.workspaces[name] = null;
+            this._createWorkspaceButton(name, newButton);
+        }
     };
 
     /* * * * * * * * * * * END Workspaces * * * * * * * * * * */
