@@ -34,7 +34,7 @@
     MDSBlockCreator.prototype.initialize = function() {
         this._concepts = {};
 
-        this.workspaces = {};
+        this.workspaces = {};  // name -> {yaml, instance}
         this.currentWorkspace = null;
         this.workspaceBtns = {};
 
@@ -388,10 +388,29 @@
 
     /* * * * * * * * * * * Workspaces * * * * * * * * * * */
 
+    /**
+     * Save the current workspace.
+     *
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype._saveWorkspace = function() {
+        var serialized;
+
+        if (this.currentWorkspace) {
+            try {
+                serialized = Blockly.Python.workspaceToCode();
+                this.workspaces[this.currentWorkspace] = {instance: yaml.load(serialized),
+                                                          yaml: serialized};
+            } catch (e) {
+                console.error('Could not save changes to '+this.currentWorkspace, e);
+            }
+        }
+    };
+
     MDSBlockCreator.prototype._initializeWorkspaces = function(instances) {
         // Add the workspaces
         instances.forEach(function(i) {
-            this.workspaces[i.name] = i;
+            this.workspaces[i.name] = {instance: i, yaml: ''};
 
             // Create HTML
             this._createWorkspaceButton(i.name);
@@ -436,12 +455,7 @@
         // Cleanly exit the current workspace if necessary
         if (this.currentWorkspace) {
             // Store the old info
-            try {
-                var serialized = Blockly.Python.workspaceToCode();
-                this.workspaces[this.currentWorkspace] = yaml.load(serialized);
-            } catch (e) {
-                console.error('Could not save changes to '+this.currentWorkspace, e);
-            }
+            this._saveWorkspace();
 
             // Empty the workspace
             Blockly.mainWorkspace.clear();
@@ -453,20 +467,20 @@
         this.workspaceBtns[name].setAttribute('class', SELECTED_CLASS.WORKSPACE);
 
         // Populate the workspace if necessary
-        if (this.workspaces[name]) {
-            this._createInstanceConcept(this.workspaces[name]);
+        if (this.workspaces[name].instance) {
+            this._createInstanceConcept(this.workspaces[name].instance);
         }
     };
 
     MDSBlockCreator.prototype._createNewWorkspace = function(newButton) {
         var name = prompt('Enter the name for the new project', 'My New Project');
-        while (name && this.workspaces[name] !== undefined) {  // TODO: Validate the name
+        while (name && this.workspaces[name]) {  // TODO: Validate the name
             name = prompt('Enter the name for the new project', name);
         }
 
         // Create the workspace!
         if (name) {
-            this.workspaces[name] = null;
+            this.workspaces[name] = {};
             this._createWorkspaceButton(name, newButton);
         }
     };
@@ -617,7 +631,17 @@
     };
 
     MDSBlockCreator.prototype._updateBlockToolbox = function() {
-        // TODO
+        // TODO: Complete this for tag support
+    };
+
+    /**
+     * Get the data to save in the project.
+     *
+     * @return {Dictionary<Filename, Content>}
+     */
+    MDSBlockCreator.prototype.getSaveData = function() {
+        this._saveWorkspace();
+        return R.mapObj(R.partialRight(Utils.getAttribute, 'yaml'), this.workspaces);
     };
 
     global.MDSBlockCreator = MDSBlockCreator;

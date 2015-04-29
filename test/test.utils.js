@@ -1,7 +1,7 @@
 /*globals yaml,expect,Utils,describe,it*/
 'use strict';
 
-describe.only('Utils testing', function() {
+describe('Utils testing', function() {
     describe('capitalize', function() {
         it('should capitalize words', function() {
             var phrase = 'i am a phrase',

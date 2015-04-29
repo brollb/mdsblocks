@@ -1,10 +1,9 @@
-/*globals expect,before,describe,it,GithubLoader*/
+/*globals beforeEach,OAUTH_TOKEN,expect,before,describe,it,GithubLoader*/
 'use strict';
 
 var owner = 'ElTester',
     project = 'octokatTest',
-    oauth = 'db536deb6c4d8a9ae48a936be26d79e4839e9515',
-    myCreds = {token: oauth},
+    myCreds = {token: OAUTH_TOKEN},
     creds = {username: 'ElTester', password: 'password123'};
 
 describe('Github Loader Tests', function() {
@@ -126,6 +125,7 @@ describe('Github Loader Tests', function() {
 
         it.skip('should load blocks by first occurrence in "path"', function(done) {
         });
+
     };
 
     describe('Using OAuth', function() {
@@ -154,6 +154,13 @@ describe('Github Loader Tests', function() {
         });
 
         testGithubFn();
+
+        it.only('should support saving project to github', function() {
+            var url = 'https://github.com/ElTester/writeTest';
+            loader.loadProject(url, function(e) {
+                loader.saveProject(url, files);
+            });
+        });
     });
 
 });
