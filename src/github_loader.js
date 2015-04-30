@@ -12,6 +12,7 @@
         this._octo = new Octokat(auth);
 
         this.currentProject = null;
+        this.currentRepo = null;
         this.projectConcepts = [];
         this._manifestFileName = 'project.yaml';  // Accessible for testing
         this.loadedConcepts = {};  // yaml files stored by id
@@ -35,8 +36,36 @@
      * @param {Dictionary<Name, Content>} files
      * @return {undefined}
      */
-    GithubLoader.prototype.saveProject = function(url, files) {
+    GithubLoader.prototype.saveProject = function(files, url) {
+        if (url) {
+            url = this._cleanUrl(url);
+        } else {
+            url = this.currentProject;
+        }
+        console.log('saving project to', url);
+        console.log('loadedConcepts:', this.loadedConcepts);
+        // Handle simultaneous updates TODO!
+
+        // Update the concept content given the file content
         // TODO
+        //this.saveConcept.bind(this);
+
+        // Save the updated files to code/<name>.yaml if instance
+        // or concepts/<name>.yaml if concept
+    };
+
+    GithubLoader.prototype.saveConcept = function(concept) {
+        var config = {
+            message: 'Modified with MDS Editor',
+            content: concept.content,
+            sha: concept.sha
+        };
+
+        this.currentRepo.contents(concept.path).add(config)
+            .then(function(info) {
+                console.log('Updating '+concept.name);
+                concept.sha = info.commit.sha;
+            });
     };
 
     /**
@@ -79,11 +108,10 @@
      */
     GithubLoader.prototype.getConcepts = function() {
         var isProjectManifest = R.partial(R.eq, Utils.removeFileExtension(manifestFileName)),
-            fn = R.pipe(R.nthArg(1), function(v) {
-                return !isProjectManifest(v);
-            });
+            conceptFilter = R.pipe(R.nthArg(1), Utils.not(isProjectManifest)),
+            rawConcepts = R.pickBy(conceptFilter, this.loadedConcepts);
 
-        return R.pickBy(fn, this.loadedConcepts);
+        return R.mapObj(R.partialRight(Utils.getAttribute, 'content'), rawConcepts);
     };
 
     /**
@@ -93,93 +121,140 @@
      */
     GithubLoader.prototype._loadProject = function(info, callback) {
         // Load the project
-        var self = this,
-            data = info.split('/'),
+        var data = info.split('/'),
             owner = data.shift(),
             projectName = data.shift(),
             branch = data.shift(),
             path = data.join('/'),
-            prependPath,
             project = this._octo.repos(owner, projectName),
             manifest = project.contents(manifestFileName).read();
 
         // Record the project as loaded
         console.log('Loading '+info);
-        if (path !== '') {
-            //path = '/' + path;
+        project.fetch(function(e, repo) {
+            if (repo.fullName+'/'+branch === this.currentProject) {
+                this.currentRepo = repo;
+            }
+
+            this.loadedProjects[info] = true;
+
+            // Retrieve the project.yaml file
+            manifest.then(function(result) {
+                var deps = yaml.load(result).path || [];
+                this.loadedConcepts[Utils.removeFileExtension(manifestFileName)] = result;
+
+                // Remove non-Github paths
+                deps = deps.filter(Utils.isGithubURL);
+
+                // Convert urls to project name and remove already loaded projects
+                deps = R.map(this._cleanUrl, deps)
+                .filter(Utils.not(this.isProjectLoaded.bind(this)));
+
+                // Load all dependencies in parallel
+                async.each(deps, 
+                    this._loadProject.bind(this),  // Load the dependency
+                    // Store the concepts next
+                    this._loadProjectConcepts.bind(this, owner, projectName, path, callback));
+            }.bind(this));
+        }.bind(this));
+    };
+
+    GithubLoader.prototype._isConceptLoaded = function(concept) {
+        var getName = R.partialRight(Utils.getAttribute, 'name');
+        return R.pipe(getName, // Get the concept's name
+                Utils.removeFileExtension,   // Remove .yaml
+                R.partialRight(R.has, this.loadedConcepts))  // Check if this.loadedConcepts has it
+                (concept);  // Call the composed function
+    };
+
+    // If it is the current project, load all the concepts (recursively)
+    // Otherwise, load root directory and the concepts directory
+    // TODO
+    GithubLoader.prototype._loadProjectConcepts = function(owner, projectName, path, callback, err) {
+        // Load all blocks in the project!
+        // For each .yaml file in the root path, store it as a
+        // concept
+        if (err) {
+            return console.error('Could not dependencies of '+owner+'/'+projectName+':', err);
         }
-        this.loadedProjects[info] = true;
 
-        // Retrieve the project.yaml file
-        manifest.then(function(result) {
-            var deps = yaml.load(result).path || [];
-            self.loadedConcepts[Utils.removeFileExtension(manifestFileName)] = result;
+        this._octo.repos(owner, projectName).fetch(function(e, repo) {
+            console.log('About to read path:', path);
 
-            // Remove non-Github paths
-            deps = deps.filter(Utils.isGithubURL);
+            // Get the contents
+            this._loadConcepts(repo, path, callback);
+        }.bind(this));
+    };
 
-            // Convert urls to project name and remove already loaded projects
-            deps = R.map(self._cleanUrl, deps).filter(function(e) {
-                return !self.isProjectLoaded(e);
+    GithubLoader.prototype._loadConcepts = function(repo, path, callback) {
+        this._loadAllFiles(repo, path, function(err, files) {
+            if (err) {
+                return console.error('Could not load files:', err);
+            }
+
+            files = this._getRelevantFiles(files);
+
+            // Store remaining concepts
+            async.each(files, this._storeConcept.bind(this, repo), callback);
+        }.bind(this));
+    };
+
+    GithubLoader.prototype._loadAllFiles = function(repo, path, callback) {
+        var isDir = R.pipe(
+                R.partialRight(Utils.getAttribute, 'type'),
+                R.partial(R.eq, 'dir')
+            ),
+            loadDir = this._loadAllFiles.bind(this, repo);
+
+        repo.contents(path).read().then(function(res) {
+
+            var files = JSON.parse(res),
+                dirs = Utils.extract(isDir, files),
+                dirPaths = R.map(R.partialRight(Utils.getAttribute, 'path'), dirs);
+
+            // Load the directories..
+            async.map(dirPaths, loadDir, function(err, results) {
+                if (err) {
+                    callback(err);
+                }
+                return callback(null, R.flatten(results).concat(files));
             });
 
-            // Load all dependencies in parallel
-            async.each(deps, function(info, callback) {
-                return self._loadProject.call(self, info, callback);
-                },
-                function(err) {
-                    // Load all blocks in the project!
-                    // For each .yaml file in the root path, store it as a
-                    // concept
-                    self._octo.repos(owner, projectName).fetch(function(e, v) {
-                        console.log('About to read path:', path);
-                        v.contents(path).read().then(function(res) {
-                        console.log('Finished reading', path);
+        }.bind(this));
+    };
 
-                            var files = JSON.parse(res);
-                            // Remove all non-yaml files
-                            files = R.map(R.partialRight(Utils.getAttribute,'name'), files)
-                                    .filter(Utils.isYamlFile);
+    /**
+     * Store the concept
+     *
+     * @param concept
+     * @return {undefined}
+     */
+    GithubLoader.prototype._storeConcept = function(repo, concept, callback) {
+        var contents = repo.contents(concept.path).read();
 
-                            console.log('files', files);
-                            
-                            // For each yaml file, store it w/o extname as loadedConcept
-                            // Remove files that are already loaded
-                            files = R.reject(function(e) {
-                                var conceptName = Utils.removeFileExtension(e);
-                                return !!self.loadedConcepts[conceptName];
-                            }, files);
+        contents.then(function(result) {
+            concept.content = result;
+            this.loadedConcepts[Utils.removeFileExtension(concept.name)] = concept;
+            if (this.currentRepo.fullName === repo.fullName) {
+                this.projectConcepts.push(Utils.removeFileExtension(concept.name));
+            }
+            callback(null);
+        }.bind(this));
+    };
 
-                            // Change the relative paths to include the repo's path used
-                            if (path) {
-                                prependPath = R.partial(R.concat, path+'/');
-                                files = R.map(prependPath, files);
-                                console.log('files are:', files);
-                            }
+    /**
+     * Remove files that are already loaded or not yaml files
+     *
+     * @param {Array<File>} files
+     * @return {Array<File>}
+     */
+    GithubLoader.prototype._getRelevantFiles = function(files) {
+        // Remove non-yaml
+        files = R.filter(R.pipe(
+            R.partialRight(Utils.getAttribute,'name'), Utils.isYamlFile), files);
 
-                            // Store remaining concepts
-                            var len = files.length;
-                            if (len) {
-                                files.forEach(function(file) {
-                                    var contents = v.contents(file).read();
-                                    contents.then(function(result) {
-                                        self.loadedConcepts[Utils.removeFileExtension(file)] = result;
-                                        if (self.currentProject === info) {
-                                            self.projectConcepts.push(Utils.removeFileExtension(file));
-                                            // TODO: Add the file relative path
-                                        }
-                                        if (--len === 0) {
-                                            callback(null);
-                                        }
-                                    });
-                                });
-                            } else {
-                                callback(null);
-                            }
-                        });
-                    });
-            });
-        });
+        // Remove files that are already loaded
+        return R.reject(this._isConceptLoaded.bind(this), files);
     };
 
     global.GithubLoader = GithubLoader;

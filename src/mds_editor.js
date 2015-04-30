@@ -8,7 +8,7 @@
 (function(global) {
     'use strict';
     
-    var DEFAULT_PROJECT = 'https://github.com/iModels/metamds-p1';
+    var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1';
 
     var MDSEditor = function(opts) {
         this.toolbox = document.getElementById('toolbox');
@@ -48,7 +48,9 @@
      * @return {undefined}
      */
     MDSEditor.prototype.saveProject = function() {
-        // TODO
+        var data = this.blockCreator.getSaveData();
+        console.log('data:', data);
+        this.github.saveProject(data);
     };
 
     MDSEditor.prototype.downloadActiveWorkspace = function() {

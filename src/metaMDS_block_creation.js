@@ -44,16 +44,6 @@
     };
 
     /**
-     * Check if a block is the definition of a concept type.
-     *
-     * @param concept
-     * @return {undefined}
-     */
-    MDSBlockCreator.prototype.isMetaConcept = function(concept) {
-        return R.has('description', concept) && R.has('properties', concept);
-    };
-
-    /**
      * Create JSON from YAML and add concept name to the concept JSON.
      *
      * @param {Dictionary} yamlConcepts
@@ -175,8 +165,8 @@
             concepts = R.values(conceptMap);
 
         // Sort the blocks by meta vs instance (ie, meta ... instance)
-        var meta = R.filter(this.isMetaConcept, concepts),
-            instances = R.reject(this.isMetaConcept, concepts);
+        var meta = R.filter(Utils.isMetaConcept, concepts),
+            instances = R.reject(Utils.isMetaConcept, concepts);
 
         // Topological sort on the meta blocks
         meta = this._sortConcepts(meta);
@@ -551,20 +541,25 @@
      * @return {undefined}
      */
     MDSBlockCreator.prototype._toggleTag = function(tag) {
-        var i = this.activeTags.indexOf(tag);
+        var i = this.activeTags.indexOf(tag),
+            changed = false;
 
         console.log('Toggling tag: "'+tag+'"');
         if (i > -1) {
             if (this.activeTags.length > 1) {
                 this.activeTags.splice(i, 1);
                 this.tagButtons[tag].setAttribute('class', DEFAULT_CLASS.TAG);
+                changed = true;
             }
         } else {
             this.activeTags.push(tag);
             this.tagButtons[tag].setAttribute('class', SELECTED_CLASS.TAG);
+            changed = true;
         }
 
-        this._updateBlockToolbox();
+        if (changed) {
+            this._updateBlockToolbox();
+        }
     };
     /* * * * * * * * * * * END TAGS * * * * * * * * * * */
 
@@ -651,6 +646,8 @@
 
     MDSBlockCreator.prototype._updateBlockToolbox = function() {
         // TODO: Complete this for tag support
+        // Empty the toolbar
+        // Populate it with the blocks that are tagged
     };
 
     /**

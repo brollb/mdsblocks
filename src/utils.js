@@ -1,3 +1,4 @@
+/*globals yaml,R*/
 // Utils for metaMDS and blockly
 (function(global) {
     'use strict';
@@ -57,6 +58,35 @@
         return array.indexOf(value) > -1;
     };
 
+    /**
+     * Return the negation of the given function.
+     *
+     * @param {Function} fn
+     * @return {Function}
+     */
+    var not = function(fn) {
+        return function() {
+            return !fn.apply(this, arguments);
+        };
+    };
+
+    /**
+     * Remove passing values from the list (destructively).
+     *
+     * @param {Function} fn
+     * @param {Array} list
+     * @return {Array}
+     */
+    var extract = function(fn, list) {
+        var result = [];
+        for (var i = list.length; i--;) {
+            if (fn(list[i])) {
+                result.unshift(list.splice(i,1)[0]);
+            }
+        }
+        return result;
+    };
+
     var isGithubURL = function(string) {
         return /https:\/\/?github.com\/[\w-_]+\/[\w-_]+/.test(string);
     };
@@ -110,6 +140,19 @@
         return lines.join('\n');
     };
 
+    /**
+     * Check if a block is the definition of a concept type.
+     *
+     * @param concept
+     * @return {undefined}
+     */
+    var isMetaConcept = function(concept) {
+        if (typeof concept === 'string') {
+            concept = yaml.load(concept);
+        }
+        return R.has('description', concept) && R.has('properties', concept);
+    };
+
     global.Utils = {
         capitalize: capitalize,
         isYamlFile: isYamlFile,
@@ -120,7 +163,12 @@
         isEmpty: isEmpty,
         contains: contains,
         createDictionary: createDictionary,
-        yamlListToArray: yamlListToArray 
+        yamlListToArray: yamlListToArray,
+
+        // Concepts
+        isMetaConcept: isMetaConcept,
+        not: not,
+        extract: extract 
     };
 
 })(this);
