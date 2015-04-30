@@ -155,7 +155,7 @@ describe('Github Loader Tests', function() {
 
         testGithubFn();
 
-        it.only('should support saving project to github', function() {
+        it('should support saving project to github', function() {
             var url = 'https://github.com/ElTester/writeTest';
             loader.loadProject(url, function(e) {
                 loader.saveProject(url, files);

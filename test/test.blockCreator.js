@@ -9,18 +9,6 @@ describe('Block creator tests', function() {
         loader = new ConceptLoader();
     });
 
-    describe('isMetaConcept', function() {
-        it('should detect meta concept', function() {
-            var concept = {description: 1, properties:1};
-            expect(blockCreator.isMetaConcept(concept)).toBe(true);
-        });
-
-        it('should detect instance concept', function() {
-            var concept = {description: 1};
-            expect(blockCreator.isMetaConcept(concept)).toBe(false);
-        });
-    });
-
     describe('cleanConceptInput', function() {
         it('should create json from yaml input', function() {
             var input = loader.loadExampleConcepts(),

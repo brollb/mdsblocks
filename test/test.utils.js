@@ -1,7 +1,7 @@
-/*globals yaml,expect,Utils,describe,it*/
+/*globals R,yaml,expect,Utils,describe,it*/
 'use strict';
 
-describe('Utils testing', function() {
+describe.only('Utils testing', function() {
     describe('capitalize', function() {
         it('should capitalize words', function() {
             var phrase = 'i am a phrase',
@@ -11,6 +11,48 @@ describe('Utils testing', function() {
 
             expect(result[0]).toBe('I');
             expect(result.substring(1)).toBe(' am a phrase');
+        });
+    });
+
+    describe('not', function() {
+        it('should return a function', function() {
+            expect(typeof Utils.not(console.log)).toBe('function');
+        });
+
+        it('should negate the given function', function() {
+            var isOdd = R.modulo(R.__, 2),
+                isEven = Utils.not(isOdd);
+
+            expect(isEven(2)).toBe(true);
+        });
+    });
+
+    describe('extract', function() {
+
+        it('should extract the odds from a list', function() {
+            var list = [1,2,3,4,5,6],
+            isOdd = R.modulo(R.__, 2),
+            odds;
+
+            odds = Utils.extract(isOdd, list);
+
+            // check that list is all odds
+            expect(R.all(Utils.not(isOdd))(list)).toBe(true);
+
+            // check that evens is all evens
+            expect(R.all(isOdd)(odds)).toBe(true);
+        });
+    });
+
+    describe('isMetaConcept', function() {
+        it('should detect meta concept', function() {
+            var concept = {description: 1, properties:1};
+            expect(Utils.isMetaConcept(concept)).toBe(true);
+        });
+
+        it('should detect instance concept', function() {
+            var concept = {description: 1};
+            expect(Utils.isMetaConcept(concept)).toBe(false);
         });
     });
 
