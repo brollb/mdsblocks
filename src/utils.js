@@ -153,6 +153,10 @@
         return R.has('description', concept) && R.has('properties', concept);
     };
 
+    var to64bitString = function(str) {
+        return window.btoa(unescape(encodeURIComponent(str)));
+    };
+
     global.Utils = {
         capitalize: capitalize,
         isYamlFile: isYamlFile,
@@ -168,7 +172,9 @@
         // Concepts
         isMetaConcept: isMetaConcept,
         not: not,
-        extract: extract 
+        extract: extract,
+
+        to64bitString: to64bitString 
     };
 
 })(this);

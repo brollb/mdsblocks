@@ -36,34 +36,26 @@
      * @param {Dictionary<Name, Content>} files
      * @return {undefined}
      */
-    GithubLoader.prototype.saveProject = function(files, url) {
-        if (url) {
-            url = this._cleanUrl(url);
-        } else {
-            url = this.currentProject;
-        }
-        console.log('saving project to', url);
-        console.log('loadedConcepts:', this.loadedConcepts);
-        // Handle simultaneous updates TODO!
-
-        // Update the concept content given the file content
-        // TODO
-        //this.saveConcept.bind(this);
-
-        // Save the updated files to code/<name>.yaml if instance
-        // or concepts/<name>.yaml if concept
+    GithubLoader.prototype.saveProject = function(files) {
+        var pairs = R.toPairs(files);
+        pairs.forEach(function(p) {
+            this.saveConcept.apply(this, p);
+        }, this);
     };
 
-    GithubLoader.prototype.saveConcept = function(concept) {
-        var config = {
-            message: 'Modified with MDS Editor',
-            content: concept.content,
+    GithubLoader.prototype.saveConcept = function(name, content) {
+        var concept = this.loadedConcepts[name],
+            config = {
+            message: 'Modified '+name+' with MDS Editor',
+            content: Utils.to64bitString(content),
             sha: concept.sha
         };
 
+        concept.content = content;
+
         this.currentRepo.contents(concept.path).add(config)
             .then(function(info) {
-                console.log('Updating '+concept.name);
+                console.log('Updating '+name);
                 concept.sha = info.commit.sha;
             });
     };
