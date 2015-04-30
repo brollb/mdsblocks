@@ -50,7 +50,7 @@ goog.inherits(Blockly.Mutator, Blockly.Icon);
  * Icon in base64 format.
  * @private
  */
-Blockly.Mutator.prototype.png_ = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAYAAAA7bUf6AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAANyAAADcgBffIlqAAAAAd0SU1FB98DGgUkCK5AYg4AAAGlSURBVDjLnZS9SiRBFIVLunt+9gUU1EmFaSfQ0GCeRcTAwEDERHYTQUZ8l6F9Ad9gMzcVfwaxdzpxuHRVZNVncHfAnt5ply0oqjj33FP3FqfKGGMM8K0suRZhGgKehhECXoSpc1wBXTMXEOHXeIzr9yGKwJjlM4ogTSHLcCLcAV1TllyPx7imxGUzy3DWMjIiTPv9OiGOYXVV92tr0GrVOWkKIuQmBPxiC1EEz8/w8ADn53B/D6+vkCR1Xgh4A9XAygrs7IBfuF7vYW9PK/zMB6iIJIlW8P4O1sLZmSaenkJZqlCeQ7vdILKxAS8vGjg5qZ54fKz4ZAKbmw0ixsDFhQZ2d6v4YKD45eUX7ayvw+OjBo6OquTDQ8WfnrTipSLtNhQFhACzGRwcwNYW7O/D25viRQGdzhfttFowHGrCgt0ZDut+AfirT5JET5xMYDTStSjqPonjPz4RYZqmdTd2OtDr6b7Xq7bw+bJFyI1zXGXZ/72d21tKa/lugK4Idzc3uO3tf3vFg4EKzGb8BOL5d9C1lpEIv70nNP0n3hNEyK3lx1zgA46lEkSYoMBCAAAAAElFTkSuQmCC';
+Blockly.Mutator.prototype.png_ = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAYAAAA7bUf6AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAANyAAADcgBffIlqAAAAAd0SU1FB98DGhULOIajyb8AAAHMSURBVDjLnZS9SiRBFIXP/CQ9iIHgPoGBTo8vIAaivoKaKJr6DLuxYqKYKIqRgSCMrblmIxqsICgOmAriziIiRXWjYPdnUDvT2+PMsOyBoop7qk71vedWS5KAkrWsGUMjSYjpgSQhNoZGFLEKeGoKGMNttUpULkOhAFL3USiA70MQEBnDDeDJWtaqVaJeB7uNICAKQ1ZkDI1yufOm+XnY2YHl5c6874MxPClJiDulkMvBxYWrw/095POdU0sS4hxALqcWtreloSGpVJLGxtL49bX0+Ci9vUkzM2kcXGFbypUKxHHLBXZ3YW4ONjfh4yN1aGIiPQOQEenrg6MjR+zvZz99Y8PFT09hYCArktdfsFY6PHTr83NlUKu5+eREennJchmR/n5pYcGtJyezG6em3Dw7Kw0OZrlMOr6f1gTg4ACWlmBvz9WoifHxbDpf3Flfd+54njQ9ncYvL6WHB+n9XVpcbHOnW59IUKu5m+p11zftfLHo+qRorZ6Hh/Xt7k5fsLUl1evS1dWfG9swMiJZq9+KIlaD4P/eztkZNgz5LsAzhpvjY6JK5d9e8eioE3h95SdQbDrkhSErxvArjkl6/U/imMQYnsKQH02BT7vbZZfVOiWhAAAAAElFTkSuQmCC';
 
 /**
  * Width of workspace.
@@ -92,15 +92,24 @@ Blockly.Mutator.prototype.createEditor_ = function() {
   this.svgDialog_ = Blockly.createSvgElement('svg',
       {'x': Blockly.Bubble.BORDER_WIDTH, 'y': Blockly.Bubble.BORDER_WIDTH},
       null);
-  Blockly.createSvgElement('rect',
-      {'class': 'blocklyMutatorBackground',
-       'height': '100%', 'width': '100%'}, this.svgDialog_);
+  // Convert the list of names into a list of XML objects for the flyout.
+  var quarkXml = goog.dom.createDom('xml');
+  for (var i = 0, quarkName; quarkName = this.quarkNames_[i]; i++) {
+    quarkXml.appendChild(goog.dom.createDom('block', {'type': quarkName}));
+  }
   var mutator = this;
-  this.workspace_ = new Blockly.WorkspaceSvg(
-      function() {return mutator.getFlyoutMetrics_();}, null);
+  var workspaceOptions = {
+    languageTree: quarkXml,
+    parentWorkspace: this.block_.workspace,
+    pathToMedia: this.block_.workspace.options.pathToMedia,
+    RTL: this.block_.RTL,
+    getMetrics: function() {return mutator.getFlyoutMetrics_();},
+    setMetrics: null,
+    svg: this.svgDialog_
+  };
+  this.workspace_ = new Blockly.WorkspaceSvg(workspaceOptions);
   this.svgDialog_.appendChild(
       this.workspace_.createDom('blocklyMutatorBackground'));
-  this.workspace_.addFlyout();
   return this.svgDialog_;
 };
 
@@ -116,7 +125,7 @@ Blockly.Mutator.prototype.updateEditable = function() {
     this.setVisible(false);
     if (this.iconGroup_) {
       Blockly.addClass_(/** @type {!Element} */ (this.iconGroup_),
-                           'blocklyIconGroupReadonly');
+                        'blocklyIconGroupReadonly');
     }
   }
 };
@@ -131,7 +140,7 @@ Blockly.Mutator.prototype.resizeBubble_ = function() {
   var workspaceSize = this.workspace_.getCanvas().getBBox();
   var flyoutMetrics = this.workspace_.flyout_.getMetrics_();
   var width;
-  if (Blockly.RTL) {
+  if (this.block_.RTL) {
     width = -workspaceSize.x;
   } else {
     width = workspaceSize.width + workspaceSize.x;
@@ -152,11 +161,12 @@ Blockly.Mutator.prototype.resizeBubble_ = function() {
     this.svgDialog_.setAttribute('height', this.workspaceHeight_);
   }
 
-  if (Blockly.RTL) {
+  if (this.block_.RTL) {
     // Scroll the workspace to always left-align.
     var translation = 'translate(' + this.workspaceWidth_ + ',0)';
     this.workspace_.getCanvas().setAttribute('transform', translation);
   }
+  this.workspace_.resize();
 };
 
 /**
@@ -175,12 +185,7 @@ Blockly.Mutator.prototype.setVisible = function(visible) {
         this.iconX_, this.iconY_, null, null);
     var thisObj = this;
     this.workspace_.flyout_.init(this.workspace_);
-    // Convert the list of names into a list of XML objects for the flyout.
-    var quarkXml = [];
-    for (var i = 0, quarkName; quarkName = this.quarkNames_[i]; i++) {
-      quarkXml[i] = goog.dom.createDom('block', {'type': quarkName});
-    }
-    this.workspace_.flyout_.show(quarkXml);
+    this.workspace_.flyout_.show(this.workspace_.options.languageTree.childNodes);
 
     this.rootBlock_ = this.block_.decompose(this.workspace_);
     var blocks = this.rootBlock_.getDescendants();
@@ -192,7 +197,7 @@ Blockly.Mutator.prototype.setVisible = function(visible) {
     this.rootBlock_.setDeletable(false);
     var margin = this.workspace_.flyout_.CORNER_RADIUS * 2;
     var x = this.workspace_.flyout_.width_ + margin;
-    if (Blockly.RTL) {
+    if (this.block_.RTL) {
       x = -x;
     }
     this.rootBlock_.moveBy(x, margin);
@@ -272,6 +277,7 @@ Blockly.Mutator.prototype.workspaceChanged_ = function() {
  * Return an object with all the metrics required to size scrollbars for the
  * mutator flyout.  The following properties are computed:
  * .viewHeight: Height of the visible rectangle,
+ * .viewWidth: Width of the visible rectangle,
  * .absoluteTop: Top-edge of view.
  * .absoluteLeft: Left-edge of view.
  * @return {!Object} Contains size and position metrics of mutator dialog's
@@ -279,15 +285,11 @@ Blockly.Mutator.prototype.workspaceChanged_ = function() {
  * @private
  */
 Blockly.Mutator.prototype.getFlyoutMetrics_ = function() {
-  var left = 0;
-  if (Blockly.RTL) {
-    left += this.workspaceWidth_;
-  }
   return {
     viewHeight: this.workspaceHeight_,
-    viewWidth: 0,  // This seem wrong, but results in correct RTL layout.
+    viewWidth: this.workspaceWidth_,
     absoluteTop: 0,
-    absoluteLeft: left
+    absoluteLeft: 0
   };
 };
 
