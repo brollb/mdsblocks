@@ -60,6 +60,9 @@
 
     GithubLoader.prototype._getUpdatedConcept = function(name, content) {
         if (!this.loadedConcepts[name]) {
+            if (!Utils.isYamlFile(name)) {
+                name += '.yaml';
+            }
             this.loadedConcepts[name] = {
                 path: 'code/'+name,
                 name: name
@@ -71,7 +74,7 @@
     };
 
     /**
-     * Extract the OWNER/PROJECT string from a URL
+     * Extract the <owner>/<project>/<branch> string from a URL
      *
      * @param {String} url
      * @return {String} <owner>/<url>

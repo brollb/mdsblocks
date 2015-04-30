@@ -302,9 +302,9 @@
             i = 0;
 
             // Connect the first one to the appropriate connection
-            outputConnection = block.getInput(v).connection;
-            childBlock = this._createInstanceConcept(children[i++]);
-            if (childBlock) {
+            if (children[i]) {
+                outputConnection = block.getInput(v).connection;
+                childBlock = this._createInstanceConcept(children[i++]);
                 inputConnection = childBlock.previousConnection || childBlock.outputConnection;
                 outputConnection.connect(inputConnection);
                 block = childBlock;
