@@ -185,9 +185,26 @@
         var metaConcepts = meta.map(R.partial(Utils.getAttribute, conceptMap)),
             metaBlocks = metaConcepts.map(this._createMetaBlock.bind(this));
 
-        // Add concepts to record for converting blocks to code
+        // Create primitive types
+        this.createPrimitiveMetaBlocks();
+
+        // Add concepts to record for creating instance blocks
         metaConcepts.forEach(this._addToConceptRecord.bind(this));
         return instances;
+    };
+
+    /**
+     * Create blocks for the toolbar for the primitive types defined in 
+     * PRIMITIVES.
+     *
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype.createPrimitiveMetaBlocks = function() {
+        var name;
+        for (var i = PRIMITIVES.length; i--;) {
+            name = PRIMITIVES[i][1];
+            this._registerConceptWithTag({name: name}, 'Primitives');
+        }
     };
 
     /**
@@ -537,9 +554,11 @@
         var i = this.activeTags.indexOf(tag);
 
         console.log('Toggling tag: "'+tag+'"');
-        if (i > -1 && this.activeTags.length > 1) {
-            this.activeTags.splice(i, 1);
-            this.tagButtons[tag].setAttribute('class', DEFAULT_CLASS.TAG);
+        if (i > -1) {
+            if (this.activeTags.length > 1) {
+                this.activeTags.splice(i, 1);
+                this.tagButtons[tag].setAttribute('class', DEFAULT_CLASS.TAG);
+            }
         } else {
             this.activeTags.push(tag);
             this.tagButtons[tag].setAttribute('class', SELECTED_CLASS.TAG);
