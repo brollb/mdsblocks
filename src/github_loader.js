@@ -44,20 +44,30 @@
     };
 
     GithubLoader.prototype.saveConcept = function(name, content) {
-        var concept = this.loadedConcepts[name],
+        var concept = this._getUpdatedConcept(name, content),
             config = {
             message: 'Modified '+name+' with MDS Editor',
             content: Utils.to64bitString(content),
             sha: concept.sha
         };
 
-        concept.content = content;
-
         this.currentRepo.contents(concept.path).add(config)
             .then(function(info) {
                 console.log('Updating '+name);
                 concept.sha = info.commit.sha;
             });
+    };
+
+    GithubLoader.prototype._getUpdatedConcept = function(name, content) {
+        if (!this.loadedConcepts[name]) {
+            this.loadedConcepts[name] = {
+                path: 'code/'+name,
+                name: name
+            };
+        }
+
+        this.loadedConcepts[name].content = content;
+        return this.loadedConcepts[name];
     };
 
     /**

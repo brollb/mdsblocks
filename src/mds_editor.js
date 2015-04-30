@@ -49,7 +49,6 @@
      */
     MDSEditor.prototype.saveProject = function() {
         var data = this.blockCreator.getSaveData();
-        console.log('data:', data);
         this.github.saveProject(data);
     };
 
