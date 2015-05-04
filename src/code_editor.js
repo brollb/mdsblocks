@@ -18,6 +18,7 @@
 
         var rect = container.getBoundingClientRect();
         this.width = rect.width;
+        this.height = rect.height
 
         this.editor = CodeMirror.fromTextArea(container, opts);
 
@@ -29,7 +30,7 @@
         this.visible = true;
         // Make the panel visible
         this._updateSize();
-        this.editor.setSize(this.width, null);
+        this.editor.setSize(this.width, this.height);
         this.editor.setValue(text);
     };
 
