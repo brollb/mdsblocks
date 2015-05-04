@@ -340,7 +340,6 @@
      * @return {Block}
      */
     MDSBlockCreator.prototype._createMetaBlock = function(concept) {
-        console.log('Creating Block for ', concept.name);
         var name = Utils.capitalize(concept.name);
         var init= function() {
             this.setTooltip(concept.description);
@@ -351,7 +350,6 @@
             //this.setOutput(true/*, name*/);
 
             // For each of the "properties", create an input
-            console.log('concept is', concept);
             var properties = Object.keys(concept.properties),
                 displayName,
                 type,

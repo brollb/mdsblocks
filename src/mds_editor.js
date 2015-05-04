@@ -15,6 +15,10 @@
         this.tagContainer = document.getElementById('tag-container');
         this.workspaceContainer = document.getElementById('workspace-container');
 
+        this.toolboxContainer = document.getElementById('toolbox-container');
+        // Container for toolbox and text editor
+        this.workingContainer = document.getElementById('working-container');
+
         // Initialize the interfaces
         this.github = new GithubLoader({token: OAUTH_TOKEN});
         this.blockCreator = new MDSBlockCreator(this.toolbox, 
@@ -22,6 +26,7 @@
 
         var codeContainer = document.getElementById('editor-container');
         this.codeEditor = new CodeEditor(codeContainer);
+        this.toggleCodeEditor();
         this.loadProject(DEFAULT_PROJECT);
     };
 
@@ -84,6 +89,24 @@
         a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':');
         e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
         a.dispatchEvent(e);
+    };
+
+    MDSEditor.prototype.toggleCodeEditor = function() {
+        var availableWidth = this.workingContainer.getBoundingClientRect().width,
+            width = availableWidth - this.toolboxContainer.getBoundingClientRect().left;
+
+        if (this.codeEditor.visible) {  // hide the editor
+            this.codeEditor.hide();
+
+            // Resize the blocks workspace
+            this.toolboxContainer.style.width = width+'px';
+        } else {  // show the editor
+            this.codeEditor.show(Blockly.Python.workspaceToCode());
+
+            // Resize the blocks workspace
+            width -= this.codeEditor.width;
+            this.toolboxContainer.style.width = width+'px';
+        }
     };
 
     global.MDSEditor = MDSEditor;
