@@ -23,6 +23,7 @@
         this.github = new GithubLoader({token: OAUTH_TOKEN});
         this.blockCreator = new MDSBlockCreator(this.toolbox, 
                                 this.workspaceContainer, this.tagContainer);
+        this.blockCreator.onWorkspaceChanged = this.updateCodeEditor.bind(this);
 
         var codeContainer = document.getElementById('editor-container');
         this.codeEditor = new CodeEditor(codeContainer);
@@ -107,6 +108,15 @@
             width -= this.codeEditor.width;
             this.toolboxContainer.style.width = width+'px';
         }
+    };
+
+    /**
+     * Update the text in the code editor
+     *
+     * @return {undefined}
+     */
+    MDSEditor.prototype.updateCodeEditor = function() {
+        this.codeEditor.editor.setValue(Blockly.Python.workspaceToCode());
     };
 
     global.MDSEditor = MDSEditor;

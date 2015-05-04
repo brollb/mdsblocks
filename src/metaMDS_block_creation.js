@@ -482,6 +482,11 @@
         if (this.workspaces[name].instance) {
             this._createInstanceConcept(this.workspaces[name].instance);
         }
+        this.onWorkspaceChanged();
+    };
+
+    MDSBlockCreator.prototype.onWorkspaceChanged = function() {
+        // nop
     };
 
     MDSBlockCreator.prototype._createNewWorkspace = function(newButton) {
