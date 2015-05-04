@@ -1,4 +1,4 @@
-/*globals alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
+/*globals CodeEditor,alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
 /*
  * MDS Editor contains the block container and Github loader container.
  *
@@ -20,6 +20,8 @@
         this.blockCreator = new MDSBlockCreator(this.toolbox, 
                                 this.workspaceContainer, this.tagContainer);
 
+        var codeContainer = document.getElementById('editor-container');
+        this.codeEditor = new CodeEditor(codeContainer);
         this.loadProject(DEFAULT_PROJECT);
     };
 
