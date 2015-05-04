@@ -194,6 +194,7 @@
         for (var i = PRIMITIVES.length; i--;) {
             name = PRIMITIVES[i][1];
             this._registerConceptWithTag({name: name}, 'Primitives');
+            this._registerConceptWithTag({name: name}, ALL_BLOCKS);
         }
     };
 
@@ -227,9 +228,8 @@
         setTimeout(function() {
             // Create the project tabs
             this._initializeWorkspaces(instances);
+            this._toggleTag(ALL_BLOCKS);
         }.bind(this), 500);
-
-        this._toggleTag(ALL_BLOCKS);
     };
 
     MDSBlockCreator.prototype._cleanName = function(name) {
@@ -308,18 +308,18 @@
                 inputConnection = childBlock.previousConnection || childBlock.outputConnection;
                 outputConnection.connect(inputConnection);
                 block = childBlock;
-            }
 
-            while (i < children.length) {
-                childBlock = this._createInstanceConcept(children[i++]);
-                if (childBlock) {
-                    inputConnection = childBlock.previousConnection;
-                    outputConnection = block.nextConnection;
-                    outputConnection.connect(inputConnection);
+                while (i < children.length) {
+                    childBlock = this._createInstanceConcept(children[i++]);
+                    if (childBlock) {
+                        inputConnection = childBlock.previousConnection;
+                        outputConnection = block.nextConnection;
+                        outputConnection.connect(inputConnection);
+                    }
+
+                    // Step forward...
+                    block = childBlock;
                 }
-
-                // Step forward...
-                block = childBlock;
             }
         },this);
 
@@ -382,7 +382,7 @@
             this.setColour(Math.random()*360);
         };
 
-        this._addBlock(concept.name, 'Basic Examples');
+        this._addBlock(concept.name, 'Basic Examples');  // FIXME: Remove this
         this._createCodeGenerator(concept);
 
         // Record tags
@@ -405,7 +405,7 @@
 
         if (this.currentWorkspace) {
             try {
-                serialized = Blockly.Python.workspaceToCode();
+                serialized = Blockly.Python.workspaceToCode(Blockly.getMainWorkspace());
                 this.workspaces[this.currentWorkspace] = {instance: yaml.load(serialized),
                                                           yaml: serialized};
             } catch (e) {
@@ -645,9 +645,28 @@
     };
 
     MDSBlockCreator.prototype._updateBlockToolbox = function() {
-        // TODO: Complete this for tag support
-        // Empty the toolbar
-        // Populate it with the blocks that are tagged
+        var blocks,
+            tree;  // tree representation of the blocks to be shown
+
+        // Get all blocks for each tag
+        blocks = this.activeTags.reduce(function(prev, curr) {
+            return prev.concat(this.tags[curr]);
+        }.bind(this), []);
+
+        // Convert this to text xml form
+        tree = '<xml>'+blocks.map(this._getBlockXml).join('\n')+'</xml>';
+
+        Blockly.getMainWorkspace().updateToolbox(tree);
+    };
+
+    /**
+     * Get the xml representation for the given block name.
+     *
+     * @param {String} name
+     * @return {String}
+     */
+    MDSBlockCreator.prototype._getBlockXml = function(name) {
+        return '<block type="'+name+'"></block>';
     };
 
     /**
