@@ -53,6 +53,13 @@
         // Create JSON from yamlConcepts
         var concepts = R.mapObj(yaml.load, yamlConcepts);
 
+        // Convert null concepts to empty objects
+        R.mapObjIndexed(function(value, key) {
+            if (!value) {
+                concepts[key] = {};
+            }
+        }, concepts);
+
         // Add 'name' to the concept
         var addNameToConcept = R.partial(Utils.addAttribute, 'name');
         R.mapObjIndexed(addNameToConcept, concepts);
