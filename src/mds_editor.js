@@ -1,4 +1,4 @@
-/*globals GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
+/*globals alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
 /*
  * MDS Editor contains the block container and Github loader container.
  *
@@ -34,7 +34,6 @@
             var concepts = this.github.getConcepts();
             this.blockCreator.createProject(this.github.projectConcepts, concepts);
 
-            // ?
             Blockly.inject(document.getElementById('toolbox-container'),
                 {toolbox: this.toolbox});
 
@@ -49,11 +48,19 @@
      */
     MDSEditor.prototype.saveProject = function() {
         var data = this.blockCreator.getSaveData();
-        this.github.saveProject(data);
+        try {
+            this.github.saveProject(data);
+        } catch(e) {
+            // FIXME: Errors are not escalated from octokat...
+            alert('Unable to save project. Please download the code and manually commit to Github. \n\nFor more info, please open the console.');
+            console.error('Error:', e);
+        }
     };
 
     MDSEditor.prototype.downloadActiveWorkspace = function() {
-        this._download(Blockly.Python.workspaceToCode(), 'GeneratedYaml.yaml');
+        // Get the name of the current project
+        
+        this._download(Blockly.Python.workspaceToCode(), this.blockCreator.currentWorkspace+'.yaml');
     };
 
     MDSEditor.prototype._download = function(data, filename) {
