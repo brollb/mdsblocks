@@ -37,6 +37,7 @@
     CodeEditor.prototype.hide = function() {
         // Set the width to zero
         this.container.style.width = 0+'px';
+        this.editor.setSize(0, 0);
         this.visible = false;
     };
 
