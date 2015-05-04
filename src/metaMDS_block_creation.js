@@ -653,6 +653,8 @@
             return prev.concat(this.tags[curr]);
         }.bind(this), []);
 
+        blocks = Utils.removeDuplicates(blocks);
+
         // Convert this to text xml form
         tree = '<xml>'+blocks.map(this._getBlockXml).join('\n')+'</xml>';
 

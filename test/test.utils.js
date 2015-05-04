@@ -130,6 +130,30 @@ describe.only('Utils testing', function() {
         });
     });
 
+    describe('removesDuplicates', function() {
+        it('should contain "a" with ["a","a","b"]', function() {
+            var res = Utils.removeDuplicates(['a','a','b']);
+            expect(res.indexOf("a")).toNotBe(-1);
+        });
+
+        it('should contain "b" with ["a","a","b"]', function() {
+            var res = Utils.removeDuplicates(['a','a','b']);
+            expect(res.indexOf('b')).toNotBe(-1);
+        });
+
+        it('should return list of size 2 with ["a","a","b"]', function() {
+            var res = Utils.removeDuplicates(['a','a','b']);
+            expect(res.length).toBe(2);
+        });
+
+        it('should contain "a","b" with ["a","b"]', function() {
+            var res = Utils.removeDuplicates(['a','b']);
+            expect(res.length).toBe(2);
+            expect(res.indexOf('b')).toNotBe(-1);
+            expect(res.indexOf('a')).toNotBe(-1);
+        });
+    });
+
     var createGithubUrlTests = function() {
         var githubUrls = {
             "https://github.com/ElTester/octokatTest": true, 

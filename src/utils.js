@@ -157,6 +157,20 @@
         return window.btoa(unescape(encodeURIComponent(str)));
     };
 
+    /**
+     * Remove duplicates by converting to and from an object.
+     *
+     * @param {Array<String>} array
+     * @return {undefined}
+     */
+    var removeDuplicates = function(array) {
+        var tmp = array.reduce(function(prev, curr) {
+                prev[curr] = true;
+                return prev;
+            }, {});
+        return Object.keys(tmp);
+    };
+
     global.Utils = {
         capitalize: capitalize,
         isYamlFile: isYamlFile,
@@ -174,7 +188,8 @@
         not: not,
         extract: extract,
 
-        to64bitString: to64bitString 
+        to64bitString: to64bitString,
+        removeDuplicates: removeDuplicates 
     };
 
 })(this);
