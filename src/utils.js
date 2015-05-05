@@ -1,4 +1,4 @@
-/*globals yaml,R*/
+/*globals unescape,yaml,R*/
 // Utils for metaMDS and blockly
 (function(global) {
     'use strict';
@@ -48,6 +48,10 @@
 
     var addAttribute = function(attribute, object, value) {
         object[attribute] = value;
+    };
+
+    var hasAttribute = function(element, attr) {
+        return element.hasOwnProperty(attr);
     };
 
     var isEmpty = function(array) {
@@ -189,7 +193,8 @@
         extract: extract,
 
         to64bitString: to64bitString,
-        removeDuplicates: removeDuplicates 
+        removeDuplicates: removeDuplicates,
+        hasAttribute: hasAttribute
     };
 
 })(this);

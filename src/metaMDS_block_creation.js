@@ -212,7 +212,7 @@
      * @param {Dictionary} yamlConcepts
      * @return {undefined}
      */
-    MDSBlockCreator.prototype.createProject = function(projectBlockNames, yamlConcepts) {
+    MDSBlockCreator.prototype.createProject = function(projectBlockNames, yamlConcepts, cb) {
         var instances;
 
         // Empty old dom stuff
@@ -235,7 +235,12 @@
         setTimeout(function() {
             // Create the project tabs
             this._initializeWorkspaces(instances);
+
             this._toggleTag(ALL_BLOCKS);
+
+            if (cb) {
+                cb();
+            }
         }.bind(this), 500);
     };
 
@@ -439,6 +444,16 @@
         btn.innerHTML = 'Create new...';
         btn.onclick = this._createNewWorkspace.bind(this, btn);
         this.workspaceContainer.appendChild(btn);
+    };
+
+    /**
+     * Merge the text changes into the current workspace
+     *
+     * @param text
+     * @return {undefined}
+     */
+    MDSBlockCreator.prototype.mergeTextChanges = function(text) {
+        // TODO
     };
 
     MDSBlockCreator.prototype._createWorkspaceButton = function(wksp, beforeBtn) {

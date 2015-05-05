@@ -1,4 +1,4 @@
-/*globals CodeEditor,alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
+/*globals R,Utils,CodeEditor,alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
 /*
  * MDS Editor contains the block container and Github loader container.
  *
@@ -23,7 +23,7 @@
         this.github = new GithubLoader({token: OAUTH_TOKEN});
         this.blockCreator = new MDSBlockCreator(this.toolbox, 
                                 this.workspaceContainer, this.tagContainer);
-        this.blockCreator.onWorkspaceChanged = this.updateCodeEditor.bind(this);
+        //this.blockCreator.onWorkspaceChanged = this.updateCodeEditor.bind(this);
 
         var codeContainer = document.getElementById('editor-container');
         this.codeEditor = new CodeEditor(codeContainer);
@@ -40,7 +40,9 @@
 
             // Create blocks for each concept
             var concepts = this.github.getConcepts();
-            this.blockCreator.createProject(this.github.projectConcepts, concepts);
+            this.blockCreator.createProject(this.github.projectConcepts, concepts, function() {
+                Blockly.mainWorkspace.fireChangeEvent = this.updateCodeEditor.bind(this);
+            }.bind(this));
 
             Blockly.inject(document.getElementById('toolbox-container'),
                 {toolbox: this.toolbox});
@@ -111,12 +113,16 @@
     };
 
     /**
-     * Update the text in the code editor
+     * Update the text in the code editor.
      *
      * @return {undefined}
      */
     MDSEditor.prototype.updateCodeEditor = function() {
-        this.codeEditor.editor.setValue(Blockly.Python.workspaceToCode());
+        // Check that the blocks are all instantiated
+        var topBlocks = Blockly.getMainWorkspace().topBlocks_;
+        if (R.all(R.partialRight(Utils.hasAttribute, 'type'))(topBlocks)) {
+            this.codeEditor.editor.setValue(Blockly.Python.workspaceToCode());
+        }
     };
 
     global.MDSEditor = MDSEditor;
