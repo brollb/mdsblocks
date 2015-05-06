@@ -63,6 +63,26 @@
     };
 
     /**
+     * Check if two objects have the same keys.
+     *
+     * @param {Object} obj1
+     * @param {Object} obj2
+     * @return {Boolean}
+     */
+    var haveSameStructure = function(obj1, obj2) {
+        var same = true,
+            keys = Object.keys(obj1);
+
+        while (same && keys.length) {
+            if (!obj2.hasOwnProperty(keys.pop())) {
+                same = false;
+            }
+        }
+
+        return same;
+    };
+
+    /**
      * Return the negation of the given function.
      *
      * @param {Function} fn
@@ -194,7 +214,8 @@
 
         to64bitString: to64bitString,
         removeDuplicates: removeDuplicates,
-        hasAttribute: hasAttribute
+        hasAttribute: hasAttribute,
+        haveSameStructure: haveSameStructure
     };
 
 })(this);

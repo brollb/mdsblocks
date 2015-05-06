@@ -669,6 +669,12 @@
         node.appendChild(block);
     };
 
+    /**
+     * Update the toolbox given the currently active tags.
+     *
+     * @private
+     * @return {undefined}
+     */
     MDSBlockCreator.prototype._updateBlockToolbox = function() {
         var blocks,
             tree;  // tree representation of the blocks to be shown
@@ -704,6 +710,117 @@
     MDSBlockCreator.prototype.getSaveData = function() {
         this._saveWorkspace();
         return R.mapObj(R.partialRight(Utils.getAttribute, 'yaml'), this.workspaces);
+    };
+
+    /**
+     * Update the blocks to match the given yaml text. 
+     *
+     * @param {ConceptInstance} instance
+     * @return {Boolean} updated
+     */
+    MDSBlockCreator.prototype.updateProject = function(instance) {
+        console.log('updating project to', instance);
+        var updating = this._updateBlock(instance);
+        // For each block...
+        //
+        // If the concept has changed
+        //     Prompt the user for a name for the new concept
+        //     Update the block's name
+        //
+        // For every property in the block
+        //     If the block is primitive, 
+        //         validate the type
+        //     Else,
+        //         recurse
+        //
+        // Update the yaml for the workspace and reload
+        if (updating) {
+            this.workspaces[this.currentWorkspace] = {instance: instance,
+                                                      yaml: yaml.dump(instance)};
+            Blockly.mainWorkspace.clear();
+            this._createInstanceConcept(instance);
+        }
+
+        return updating;
+    };
+
+    /**
+     * Update the given instance block.
+     *
+     * @param instance
+     * @return {Boolean} valid
+     */
+    MDSBlockCreator.prototype._updateBlock = function(instance) {
+        // Check the concept definition
+        var name = Object.keys(instance)[0],
+            concept = this._concepts[name];
+
+        if (this._hasConceptChanged(instance)) {
+            var conceptName = prompt('The structure for '+name+' has changed.\n'+
+                'Please enter a name for the new concept in the text.', name+'_new');
+
+            concept = this._inferConceptFromInstance(instance);
+
+            // Create the new concept
+            // TODO
+        }
+
+        // Validate the block
+        var keys = Object.keys(instance[name]),
+            validate = MDSBlockCreator._validateProperty.bind(this, concept),
+            valid = true,
+            i = keys.length;
+
+        while (i-- && valid) {
+            valid = validate(instance[name][keys[i]], keys[i]);
+        }
+
+        console.log('Content is valid?', valid);
+        return valid;
+
+        // Update the yaml for the workspace and reload
+        // TODO
+
+        // Return if the block is valid
+    };
+
+    /**
+     * Check if the instance has changed from the base concept definition.
+     *
+     * @private
+     * @param {Instance} instance
+     * @return {Boolean} changed
+     */
+    MDSBlockCreator.prototype._hasConceptChanged = function(instance) {
+        var name = Object.keys(instance)[0],
+            concept = this._concepts[name];
+
+        // TODO: Check the types
+        return !Utils.haveSameStructure(instance[name], concept.properties);
+    };
+
+    MDSBlockCreator.prototype._inferConceptFromInstance = function(instance) {
+        // TODO
+    };
+
+    // Static methods
+    MDSBlockCreator._validateProperty = function(concept, value, prop) {
+        var expectedType = concept.properties[prop].type;
+
+        if (value instanceof Object) {
+            // Check the block type
+            var type = Object.keys(value)[0],
+                valid = true;
+
+            //if (value instanceof Array) {
+                // Validate the block internals
+            //}
+
+            // Check if it's an array
+            
+        } else {
+            return (typeof value) === expectedType || value === null;
+        }
     };
 
     global.MDSBlockCreator = MDSBlockCreator;

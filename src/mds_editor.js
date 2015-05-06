@@ -1,4 +1,4 @@
-/*globals R,Utils,CodeEditor,alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
+/*globals yaml,confirm,R,Utils,CodeEditor,alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
 /*
  * MDS Editor contains the block container and Github loader container.
  *
@@ -21,13 +21,15 @@
 
         // Initialize the interfaces
         this.github = new GithubLoader({token: OAUTH_TOKEN});
-        this.blockCreator = new MDSBlockCreator(this.toolbox, 
+        this.blockEditor = new MDSBlockCreator(this.toolbox, 
                                 this.workspaceContainer, this.tagContainer);
-        //this.blockCreator.onWorkspaceChanged = this.updateCodeEditor.bind(this);
+        //this.blockEditor.onWorkspaceChanged = this.updateCodeEditor.bind(this);
 
         var codeContainer = document.getElementById('editor-container');
         this.codeEditor = new CodeEditor(codeContainer);
+        this.codeEditor.onExit = this.updateBlockEditor.bind(this);
         this.toggleCodeEditor();
+
         this.loadProject(DEFAULT_PROJECT);
     };
 
@@ -40,7 +42,7 @@
 
             // Create blocks for each concept
             var concepts = this.github.getConcepts();
-            this.blockCreator.createProject(this.github.projectConcepts, concepts, function() {
+            this.blockEditor.createProject(this.github.projectConcepts, concepts, function() {
                 Blockly.mainWorkspace.fireChangeEvent = this.updateCodeEditor.bind(this);
             }.bind(this));
 
@@ -57,7 +59,7 @@
      * @return {undefined}
      */
     MDSEditor.prototype.saveProject = function() {
-        var data = this.blockCreator.getSaveData();
+        var data = this.blockEditor.getSaveData();
         try {
             this.github.saveProject(data);
         } catch(e) {
@@ -70,7 +72,7 @@
     MDSEditor.prototype.downloadActiveWorkspace = function() {
         // Get the name of the current project
         
-        this._download(Blockly.Python.workspaceToCode(), this.blockCreator.currentWorkspace+'.yaml');
+        this._download(Blockly.Python.workspaceToCode(), this.blockEditor.currentWorkspace+'.yaml');
     };
 
     MDSEditor.prototype._download = function(data, filename) {
@@ -113,7 +115,7 @@
     };
 
     /**
-     * Update the text in the code editor.
+     * Update the text in the code editor on block change.
      *
      * @return {undefined}
      */
@@ -123,6 +125,36 @@
         if (R.all(R.partialRight(Utils.hasAttribute, 'type'))(topBlocks)) {
             this.codeEditor.editor.setValue(Blockly.Python.workspaceToCode());
         }
+    };
+
+    /**
+     * Update the block editor given text changes.
+     *
+     * @return {undefined}
+     */
+    MDSEditor.prototype.updateBlockEditor = function() {
+        // Get the text
+        var text = this.codeEditor.editor.getValue(),
+            failed = false,
+            json;
+
+        // Validate the text
+        try {
+            json = yaml.load(text);
+            failed = !this.blockEditor.updateProject(json);
+        } catch (e) {
+            failed = true;
+        }
+
+        // If the block editor couldn't be loaded update the code editor
+        if (failed) {
+            var reload = confirm('Invalid YAML syntax.'+
+                '\nWould you like to discard your text edits?');
+            if (reload) {
+                this.updateCodeEditor();
+            }
+        }
+
     };
 
     global.MDSEditor = MDSEditor;

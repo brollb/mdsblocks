@@ -18,11 +18,14 @@
 
         var rect = container.getBoundingClientRect();
         this.width = rect.width;
-        this.height = rect.height
+        this.height = rect.height;
 
         this.editor = CodeMirror.fromTextArea(container, opts);
-
         this.visible = true;
+
+        this.editor.on('blur', function() {
+            this.onExit();
+        }.bind(this));
     };
 
     CodeEditor.prototype.show = function(text) {
@@ -50,6 +53,15 @@
 
     CodeEditor.prototype._updateSize = function() {
         this.container.style.width = this.width+'px';
+    };
+
+    /**
+     * Callback for when the user clicks outside the code editor
+     *
+     * @return {undefined}
+     */
+    CodeEditor.prototype.onExit = function() {
+        // nop
     };
 
     global.CodeEditor = CodeEditor;
