@@ -807,17 +807,10 @@
     MDSBlockCreator._validateProperty = function(concept, value, prop) {
         var expectedType = concept.properties[prop].type;
 
-        if (value instanceof Object) {
+        if (value instanceof Array && expectedType === 'list') {
             // Check the block type
-            var type = Object.keys(value)[0],
-                valid = true;
+            return value.every(this._updateBlock.bind(this));
 
-            //if (value instanceof Array) {
-                // Validate the block internals
-            //}
-
-            // Check if it's an array
-            
         } else {
             return (typeof value) === expectedType || value === null;
         }
