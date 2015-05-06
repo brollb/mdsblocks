@@ -154,6 +154,31 @@ describe.only('Utils testing', function() {
         });
     });
 
+    describe('hasSameStructure', function() {
+        it('should return true for same object', function() {
+            var obj = {a: 1, b:2},
+                res = Utils.haveSameStructure(obj, obj);
+
+            expect(res).toBe(true);
+        });
+
+        it('should return false if keys differ', function() {
+            var obj1 = {a: 1, b:2},
+                obj2 = {c: 1, b:2},
+                res = Utils.haveSameStructure(obj1, obj2);
+
+            expect(res).toBe(false);
+        });
+
+        it('should return true even when values differ', function() {
+            var obj1 = {a: 1, b:2},
+                obj2 = {a: 7, b:2},
+                res = Utils.haveSameStructure(obj1, obj2);
+
+            expect(res).toBe(true);
+        });
+    });
+
     var createGithubUrlTests = function() {
         var githubUrls = {
             "https://github.com/ElTester/octokatTest": true, 

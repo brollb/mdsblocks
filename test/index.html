@@ -30,7 +30,7 @@
         <script src="../src/lib/ramda.min.js"></script>
         <script src="../src/lib/async.js"></script>
 
-        <script src="../src/lib/yaml.min.js"></script>
+        <script src="../src/lib/js-yaml.min.js"></script>
         <script src="../src/lib/octokat.js"></script>
         <script src="../src/utils.js"></script>
         <script src="../src/oauth_token.js"></script>
@@ -44,9 +44,11 @@
         <script>mocha.setup('bdd')</script>
 
         <script src="test.utils.js"></script>
+        <script src="yaml.js"></script>
         <script src="test.blockCreator.js"></script>
         <script src="test.githubLoader.js"></script>
         <script>
+            var yaml = jsyaml;
             mocha.checkLeaks();
             mocha.globals(['Octokat', 'expect', 'yaml', 'R', 'async']);
             mocha.run();

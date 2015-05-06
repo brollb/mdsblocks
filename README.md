@@ -9,30 +9,13 @@ This contains my blockly-concepts integration for metamds
     + project.yaml
 
 ## To Do:
-+ Write to `Github`
-    + How should the projects be saved?
-      + Should we save on a workspace-basis?
-        + This might be the most straight forward
-        + We need to figure out the workspace path...
-          + The Github loader can store the path info from github on load
-    + We should save a workspace at a time. Each workspace is one instantiated root block and creates a single yaml file
-
-    + We should create a `MDSProject` object which has both a Github interface and a BlockCreator. When the `Save` button is clicked, it should save the projects to `Github`. 
-        + The BlockCreator will need to keep track of the current projects.
-
-    + Should each project be a namespace?
-
-+ What should we do with multiple blocks?
-
-+ Save all workspaces to `Github`
-
-+ Tags for blocks
-    + Test this with multiple blocks and tags
-
++ Github login
 + Text view of the blocks
     + diffs
     + class inheritance
     + class override
+
+    + Detect if the base class no longer fits
 
 + I think there is a bug in octokat
     + I think it is doing unauthenticated reads to github... (these are limited)
@@ -44,6 +27,15 @@ This contains my blockly-concepts integration for metamds
     + How do we know the output of the concept? 
 
 ## Completed To Do Items:
++ Should populate the toolbar by the tagged elements
+
++ Add primitive types to toolbar
+
++ Tags for blocks
+    + Test this with multiple blocks and tags
+    + Add tags to the blocks themselves
+    + DONE
+
 + Add names to blocks
     + DONE
 
@@ -72,6 +64,24 @@ This contains my blockly-concepts integration for metamds
 + Projects
     + Should persist
         + DONE
+
++ Save all workspaces to `Github`
+    + Done
+    + What should we do with multiple blocks?
+        DONE
+
++ Write to `Github`
+    + How should the projects be saved?
+      + Should we save on a workspace-basis?
+        + This might be the most straight forward
+        + We need to figure out the workspace path...
+          + The Github loader can store the path info from github on load
+    + We should save a workspace at a time. Each workspace is one instantiated root block and creates a single yaml file
+
+    + We should create a `MDSProject` object which has both a Github interface and a BlockCreator. When the `Save` button is clicked, it should save the projects to `Github`. 
+        + The BlockCreator will need to keep track of the current projects.
+        + DONE
+
 
 
 ## Questions

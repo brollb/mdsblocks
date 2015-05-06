@@ -13,7 +13,7 @@
     <!-- Hiding my oauth token -->
     <script src="src/oauth_token.js"></script>
 
-    <script src="src/lib/yaml.min.js"></script>
+    <script src="src/lib/js-yaml.min.js"></script>
     <script src="src/lib/ramda.min.js"></script>
     <script src="src/lib/async.js"></script>
     <script src="src/lib/octokat.js"></script>
@@ -22,8 +22,15 @@
     <script src="src/metaMDS_block_creation.js"></script>
     <script src="src/concept_loader.js"></script>
     <script src="src/github_loader.js"></script>
+    <script src="src/code_editor.js"></script>
     <script src="src/mds_editor.js"></script>
     <script src="src/lib/example_concepts/yaml_concepts.js"></script>
+
+    <!-- Codemirror -->
+    <link rel="stylesheet" href="src/css/codemirror.css">
+    <script src="src/lib/codemirror.js"></script>
+    <script src="src/lib/vim.js"></script>
+    <script src="src/lib/yaml.js"></script>
 
     <script src="//code.jquery.com/jquery-2.1.3.js"></script>
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
@@ -45,14 +52,48 @@
         height: 100%;
         width: 100%;
       }
+
+      #toolbox-container {
+          float: left;
+          height: 100%;
+          width: 50%;
+      }
+
+      #editor-container {
+        background: gray;
+
+        float: left;
+        position: absolute;
+        height: 100%;
+        width: 50%;
+      }
     </style>
     <script>
+      var yaml = jsyaml;
       function init() {
           var editor = new MDSEditor();
 
           // Download, Save buttons
           document.getElementById('download').onclick = editor.downloadActiveWorkspace.bind(editor);
           document.getElementById('save').onclick = editor.saveProject.bind(editor);
+          document.getElementById('toggle-editor').onclick = editor.toggleCodeEditor.bind(editor);
+
+          // Update the layout on resize
+          var editorContainer = document.getElementById('editor-container'),
+              toolboxContainer = document.getElementById('toolbox-container');
+
+          var updateLayout = function() {
+              // Get width, left
+              var rect = toolboxContainer.getBoundingClientRect(),
+                  pos = rect.left + rect.width;
+
+              // Set left of editorContainer
+              editorContainer.style.left = pos+'px';
+
+              // Fix the height, width
+              // TODO
+          };
+          window.onresize = updateLayout;
       }
     </script>
   </head>
@@ -62,17 +103,22 @@
       </div>
       <div class="container-fluid" style="height:90%">
       <div class="row" style="height:100%">
+
           <div id="tag-container" class="btn-group-vertical col-md-1">
               <a href="javascript:void(0)" class="btn btn-default">Loading...</a>
           </div>
-          <div class="col-md-10" id="toolbox-container" style="height:100%"></div><!-- FIXME -->
+          <div id='working-container' style="height:100%;width:100%">
+              <div class="col-md-4" id="toolbox-container"></div>
+              <textarea class="col-md-4" id="editor-container"></textarea>
+          </div>
       </div>
       </div>
     <xml id="toolbox" style="display: none"></xml>
     <div id="tag-container"></div>
     <div class="pull-right">
+        <a id="toggle-editor" href="javascript:void(0)" class="btn btn-success">Edit Text</a>
         <a id="download" href="javascript:void(0)" class="btn btn-success">Download YAML</a>
-        <a id="save" href="javascript:void(0)" class="btn btn-success">Save</a>
+        <a id="save" href="javascript:void(0)" class="btn btn-success">Commit</a>
     </div>
   </body>
   <!-- Download button -->
