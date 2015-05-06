@@ -7,10 +7,27 @@
 
     var count = 0,
         PRIMITIVES = [
-            /* [ REGEX_PATTERN, BLOCK_NAME, BLOCK_FIELD_NAME ]*/
-            [ /\.*/, 'text', 'TEXT' ],
-            [ /\d*\.\d+/, 'math_number', 'NUM' ],  // Float
-            [ /\d+/, 'math_number', 'NUM' ]  // Integer
+            // String
+            {
+                regex: /\.*/,
+                block: 'text',
+                field: 'TEXT',
+                name: 'string'
+            },
+            // Float
+            {
+                regex: /\d*\.\d+/,
+                block: 'math_number',
+                field: 'NUM',
+                name: 'number'
+            },
+            // Integer
+            {
+                regex: /\d+/,
+                block: 'math_number',
+                field: 'NUM',
+                name: 'number'
+            },
         ],
         ALL_BLOCKS = 'All',
         SELECTED_CLASS = {TAG: 'btn btn-info', WORKSPACE: 'btn btn-info'},
@@ -199,7 +216,7 @@
     MDSBlockCreator.prototype.createPrimitiveMetaBlocks = function() {
         var name;
         for (var i = PRIMITIVES.length; i--;) {
-            name = PRIMITIVES[i][1];
+            name = PRIMITIVES[i].block;
             this._registerConceptWithTag({name: name}, 'Primitives');
             this._registerConceptWithTag({name: name}, ALL_BLOCKS);
         }
@@ -255,22 +272,16 @@
      * @return {Block}
      */
     MDSBlockCreator.prototype._createPrimitiveBlock = function(instance) {
+        // FIXME: numbers should be able to be swapped with text for templates
         var mainBlock;
         if (typeof instance !== 'object') {
             // Find the primitive type
-            var i = PRIMITIVES.length,
-                primitive;
+            var primitive = this._getPrimitive(instance);
 
-            while (i-- && !primitive) {
-                if (PRIMITIVES[i][0].test(instance)) {
-                    primitive = PRIMITIVES[i];
-                }
-            }
-
-            mainBlock = Blockly.Block.obtain(Blockly.getMainWorkspace(), primitive[1]);
+            mainBlock = Blockly.Block.obtain(Blockly.getMainWorkspace(), primitive.block);
             mainBlock.initSvg();
             mainBlock.render();
-            mainBlock.setFieldValue(instance.toString(), primitive[2]);
+            mainBlock.setFieldValue(instance.toString(), primitive.field);
         } else {
             console.error('Unsupported type:', instance);
         }
@@ -745,9 +756,10 @@
     };
 
     /**
-     * Update the given instance block.
+     * Update the given instance block given the json representation.
      *
-     * @param instance
+     * @private
+     * @param {JSON} instance
      * @return {Boolean} valid
      */
     MDSBlockCreator.prototype._updateBlock = function(instance) {
@@ -759,10 +771,20 @@
             var conceptName = prompt('The structure for '+name+' has changed.\n'+
                 'Please enter a name for the new concept in the text.', name+'_new');
 
-            concept = this._inferConceptFromInstance(instance);
+            concept = this._inferConceptFromInstance(instance, name);
+            concept.name = conceptName;
 
             // Create the new concept
-            // TODO
+            this._createMetaBlock(concept);
+            this._addToConceptRecord(concept);  // Should it be allowed to override current?
+
+            // Update toolbox to add the meta block
+            this._updateBlockToolbox();
+
+            // update "name" of the current instance
+            instance[conceptName] = instance[name];
+            delete instance[name];
+            name = conceptName;
         }
 
         // Validate the block
@@ -775,13 +797,7 @@
             valid = validate(instance[name][keys[i]], keys[i]);
         }
 
-        console.log('Content is valid?', valid);
         return valid;
-
-        // Update the yaml for the workspace and reload
-        // TODO
-
-        // Return if the block is valid
     };
 
     /**
@@ -799,8 +815,36 @@
         return !Utils.haveSameStructure(instance[name], concept.properties);
     };
 
-    MDSBlockCreator.prototype._inferConceptFromInstance = function(instance) {
-        // TODO
+    MDSBlockCreator.prototype._inferConceptFromInstance = function(instance, name) {
+        // Create a new concept with the appropriate fields
+        var concept = {description: 'Auto-created concept'},
+            getName = R.partialRight(Utils.getAttribute, 'name'),
+            createTypeInfo = function(value) {
+                return {type: value};
+            };
+
+        // Add each of the instance types
+
+        concept.properties = R.mapObj(R.pipe(this._getPrimitive, getName, createTypeInfo), 
+                                instance[name]);
+        return concept;
+    };
+
+    /**
+     * Infer the type based on the given string.
+     *
+     * @private
+     * @param {String} string
+     * @return {Primitive}
+     */
+    MDSBlockCreator.prototype._getPrimitive = function(string) {
+        var i = PRIMITIVES.length;
+        while (i--) {
+            if (PRIMITIVES[i].regex.test(string)) {
+                return PRIMITIVES[i];
+            }
+        }
+        return null;
     };
 
     // Static methods

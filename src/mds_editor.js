@@ -139,19 +139,21 @@
             json;
 
         // Validate the text
-        try {
-            json = yaml.load(text);
-            failed = !this.blockEditor.updateProject(json);
-        } catch (e) {
-            failed = true;
-        }
+        if (text.length > 0) {
+            //try {
+                json = yaml.load(text);
+                failed = !this.blockEditor.updateProject(json);
+            //} catch (e) {
+                //failed = true;
+            //}
 
-        // If the block editor couldn't be loaded update the code editor
-        if (failed) {
-            var reload = confirm('Invalid YAML syntax.'+
+            // If the block editor couldn't be loaded update the code editor
+            if (failed) {
+                var reload = confirm('Invalid YAML syntax.'+
                 '\nWould you like to discard your text edits?');
             if (reload) {
                 this.updateCodeEditor();
+            }
             }
         }
 
