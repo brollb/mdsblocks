@@ -720,7 +720,10 @@
      */
     MDSBlockCreator.prototype.getSaveData = function() {
         this._saveWorkspace();
-        return R.mapObj(R.partialRight(Utils.getAttribute, 'yaml'), this.workspaces);
+        // TODO: Add the concepts, too
+        return {concepts: R.mapObj(yaml.dump, this._concepts),
+                instances: R.mapObj(R.partialRight(Utils.getAttribute, 'yaml'), this.workspaces)};
+        //return R.mapObj(R.partialRight(Utils.getAttribute, 'yaml'), this.workspaces);
     };
 
     /**

@@ -37,14 +37,20 @@
      * @return {undefined}
      */
     GithubLoader.prototype.saveProject = function(files) {
+        this._saveToPath(files.instances, 'code/');
+        this._saveToPath(files.concepts, 'concepts/');
+    };
+
+    GithubLoader.prototype._saveToPath = function(files, path) {
         var pairs = R.toPairs(files);
         pairs.forEach(function(p) {
+            p.unshift(path);
             this.saveConcept.apply(this, p);
         }, this);
     };
 
-    GithubLoader.prototype.saveConcept = function(name, content) {
-        var concept = this._getUpdatedConcept(name, content),
+    GithubLoader.prototype.saveConcept = function(path, name, content) {
+        var concept = this._getUpdatedConcept(name, content, path),
             config = {
             message: 'Modified '+name+' with MDS Editor',
             content: Utils.to64bitString(content),
@@ -58,13 +64,13 @@
             });
     };
 
-    GithubLoader.prototype._getUpdatedConcept = function(name, content) {
+    GithubLoader.prototype._getUpdatedConcept = function(name, content, path) {
         if (!this.loadedConcepts[name]) {
             if (!Utils.isYamlFile(name)) {
                 name += '.yaml';
             }
             this.loadedConcepts[name] = {
-                path: 'code/'+name,
+                path: path+name,
                 name: name
             };
         }
