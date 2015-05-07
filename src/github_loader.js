@@ -245,6 +245,9 @@
 
         contents.then(function(result) {
             concept.content = result;
+            // If the concept already exists, check if the current concept path is
+            // earlier than the other concepts path
+            // TODO
             this.loadedConcepts[Utils.removeFileExtension(concept.name)] = concept;
             if (this.currentRepo.fullName === repo.fullName) {
                 this.projectConcepts.push(Utils.removeFileExtension(concept.name));

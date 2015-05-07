@@ -94,10 +94,10 @@ describe('Block creator tests', function() {
             });
         });
 
-        describe('createBlocks', function() {
-            it('should be ordered', function() {
-                blockCreator.createBlocks(input);
-            });
-        });
+        //describe('createBlocks', function() {
+            //it('should be ordered', function() {
+                //blockCreator.createBlocks(input);
+            //});
+        //});
     });
 });
