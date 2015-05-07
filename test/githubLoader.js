@@ -119,9 +119,11 @@ describe('Github Loader Tests', function() {
             });
         });
 
-        it.skip('should load concepts in order given by path', function(done) {
+        it.only('should load concepts in order given by path', function(done) {
+            this.timeout(3000);
             loader.loadProject('https://github.com/ElTester/octokatTest', function(err) {
                 expect(loader.getConcepts().test.indexOf(3)).toBe(-1);
+                done();
             });
         });
 
@@ -160,7 +162,7 @@ describe('Github Loader Tests', function() {
         it.skip('should support saving project to github', function() {
             var url = 'https://github.com/ElTester/writeTest';
             loader.loadProject(url, function(e) {
-                loader.saveProject(url, files);
+                //loader.saveProject(url, files);
             });
         });
     });

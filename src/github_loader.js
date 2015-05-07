@@ -16,6 +16,13 @@
         this.projectConcepts = [];
         this._manifestFileName = 'project.yaml';  // Accessible for testing
         this.loadedConcepts = {};  // yaml files stored by id
+
+        // Priority of concepts. Contains a lexical numbering where 
+        // 
+        //     1.2.10.3 
+        //
+        // is the 1st dependency's 2nd dependency's 10th dependency's 3rd dependency
+        this._repoPriority = {};
     };
 
     /**
@@ -71,6 +78,7 @@
             }
             this.loadedConcepts[name] = {
                 path: path+name,
+                origin: this.currentRepo.fullName,
                 name: name
             };
         }
@@ -128,6 +136,9 @@
     /**
      * Internal project loading. 
      *
+     * @param {Repo} parent of the requested project
+     * @param {String} Github project id
+     * @param {Function} callback
      * @return {undefined}
      */
     GithubLoader.prototype._loadProject = function(info, callback) {
@@ -142,32 +153,86 @@
 
         // Record the project as loaded
         console.log('Loading '+info);
+
         project.fetch(function(e, repo) {
             if (repo.fullName+'/'+branch === this.currentProject) {
                 this.currentRepo = repo;
+                this._repoPriority[repo.fullName] = '0';
             }
 
             this.loadedProjects[info] = true;
 
             // Retrieve the project.yaml file
-            manifest.then(function(result) {
-                var deps = yaml.load(result).path || [];
-                this.loadedConcepts[Utils.removeFileExtension(manifestFileName)] = result;
+            this._storeConcept(repo, {name: manifestFileName, 
+                                      path: manifestFileName}, function(err, result) {
+                var deps = yaml.load(result.content).path || [];
 
                 // Remove non-Github paths
                 deps = deps.filter(Utils.isGithubURL);
 
                 // Convert urls to project name and remove already loaded projects
                 deps = R.map(this._cleanUrl, deps)
-                .filter(Utils.not(this.isProjectLoaded.bind(this)));
+                    .filter(Utils.not(this.isProjectLoaded.bind(this)));
+
+                this._recordPriorities(repo, deps);
 
                 // Load all dependencies in parallel
                 async.each(deps, 
                     this._loadProject.bind(this),  // Load the dependency
                     // Store the concepts next
                     this._loadProjectConcepts.bind(this, owner, projectName, path, callback));
+
             }.bind(this));
         }.bind(this));
+    };
+
+    GithubLoader.prototype._getRepo = function(info, cb) {
+        var data = info.split('/'),
+            owner = data.shift(),
+            projectName = data.shift(),
+            branch = data.shift(),
+            path = data.join('/'),
+            project = this._octo.repos(owner, projectName),
+            manifest = project.contents(manifestFileName).read();
+
+        // Record the project as loaded
+        console.log('Loading '+info);
+
+        project.fetch(cb);
+    };
+
+    GithubLoader.prototype._isPriorTo = function(r1, r2) {
+        var order1 = this._repoPriority[r1].split('.'),
+            order2 = this._repoPriority[r2].split('.'),
+            n1,
+            n2,
+            len = Math.min(order1.length, order2.length);
+
+        for (var i = 1; i < len; i++) {
+            // Compare each number
+            n1 = parseInt(order1[i]);
+            n2 = parseInt(order2[i]);
+            if (n1 !== n2) {
+                return n1 < n2;
+            }
+        }
+
+        return order1.length < order2.length;
+    };
+
+    GithubLoader.prototype._recordPriorities = function(parent, deps, callback) {
+        // Set the project's priority
+        var parentPriority = this._repoPriority[parent.fullName] || '';
+
+        async.each(deps, function(dep, cb) {
+            this._getRepo(dep, function(e, repo) {
+                if (e) {
+                    throw e;
+                }
+                var num = deps.indexOf(dep);
+                this._repoPriority[repo.fullName] = parentPriority+'.'+num;
+            }.bind(this));
+        }.bind(this), callback);
     };
 
     GithubLoader.prototype._isConceptLoaded = function(concept) {
@@ -245,14 +310,22 @@
 
         contents.then(function(result) {
             concept.content = result;
+            concept.origin = repo.fullName;
             // If the concept already exists, check if the current concept path is
             // earlier than the other concepts path
             // TODO
-            this.loadedConcepts[Utils.removeFileExtension(concept.name)] = concept;
+            var name = Utils.removeFileExtension(concept.name);
+            if (!this.loadedConcepts[name] || // Not loaded or has precedence
+                this._isPriorTo(concept.origin, this.loadedConcepts[name].origin)) {
+
+                this.loadedConcepts[name] = concept;
+            }
+
+            // Store project concepts
             if (this.currentRepo.fullName === repo.fullName) {
                 this.projectConcepts.push(Utils.removeFileExtension(concept.name));
             }
-            callback(null);
+            callback(null, concept);
         }.bind(this));
     };
 
@@ -268,7 +341,7 @@
             R.partialRight(Utils.getAttribute,'name'), Utils.isYamlFile), files);
 
         // Remove files that are already loaded
-        return R.reject(this._isConceptLoaded.bind(this), files);
+        return /*R.reject(this._isConceptLoaded.bind(this), */files;/*);*/
     };
 
     global.GithubLoader = GithubLoader;
