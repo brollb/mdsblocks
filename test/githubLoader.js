@@ -7,6 +7,7 @@ var owner = 'ElTester',
     creds = {username: 'ElTester', password: 'password123'};
 
 describe('Github Loader Tests', function() {
+    this.timeout(3500);
 
     var loader;
 
@@ -119,8 +120,7 @@ describe('Github Loader Tests', function() {
             });
         });
 
-        it.only('should load concepts in order given by path', function(done) {
-            this.timeout(3000);
+        it('should load concepts in order given by path', function(done) {
             loader.loadProject('https://github.com/ElTester/octokatTest', function(err) {
                 expect(loader.getConcepts().test.indexOf(3)).toBe(-1);
                 done();
