@@ -141,6 +141,7 @@
         // Validate the text
         if (text.length > 0) {
             //try {
+                text = text.replace('\t', '    ');  // replace tabs w/ 4 spaces
                 json = yaml.load(text);
                 failed = !this.blockEditor.updateProject(json);
             //} catch (e) {

@@ -814,8 +814,7 @@
         var name = Object.keys(instance)[0],
             concept = this._concepts[name];
 
-        // TODO: Check the types
-        return !Utils.haveSameStructure(instance[name], concept.properties);
+        return !concept || !Utils.haveSameStructure(instance[name], concept.properties);
     };
 
     MDSBlockCreator.prototype._inferConceptFromInstance = function(instance, name) {
