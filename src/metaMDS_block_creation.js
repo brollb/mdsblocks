@@ -382,7 +382,7 @@
                 displayName = properties[i].replace(/_/g, ' ');
                 type = Utils.capitalize(concept.properties[properties[i]].type || 'Default');
 
-                if (type.toLowerCase() === 'list') {
+                if (type.toLowerCase() === 'list' || type.toLowerCase() === 'dict') {
                     displayName += ':';
                     input = this.appendStatementInput(properties[i]);
                 } else {
@@ -630,6 +630,10 @@
                 snippet = Blockly.Python.statementToCode(block, names[i]);
                 // Convert the snippet into YAML array format
                 snippet = '\n'+Utils.yamlListToArray(snippet);
+            } else if (type === 'dict') {
+                snippet = '\n'+Blockly.Python.statementToCode(block, names[i]);
+                // Indent the snippet
+                snippet = snippet.replace(/\n/g, '\n  ');
             } else {
                 snippet = (Blockly.Python.valueToCode(block, names[i], Blockly.Python.ORDER_NONE) || '');
             }

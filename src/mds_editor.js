@@ -8,7 +8,8 @@
 (function(global) {
     'use strict';
     
-    var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1';
+    var DEFAULT_PROJECT = 'https://github.com/brollb/concept-creation';
+    //var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1';
 
     var MDSEditor = function(opts) {
         this.toolbox = document.getElementById('toolbox');
@@ -20,6 +21,8 @@
         this.workingContainer = document.getElementById('working-container');
 
         // Initialize the interfaces
+        // Currently, I am using OAUTH_TOKEN = <my_github_token>. Obviously, to log in as
+        // someone else, we can just change OAUTH_TOKEN
         this.github = new GithubLoader({token: OAUTH_TOKEN});
         this.blockEditor = new MDSBlockCreator(this.toolbox, 
                                 this.workspaceContainer, this.tagContainer);
@@ -42,6 +45,7 @@
 
             // Create blocks for each concept
             var concepts = this.github.getConcepts();
+            console.log('Concepts are:', concepts);
             this.blockEditor.createProject(this.github.projectConcepts, concepts, function() {
                 Blockly.mainWorkspace.fireChangeEvent = this.updateCodeEditor.bind(this);
             }.bind(this));
