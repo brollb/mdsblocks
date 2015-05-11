@@ -436,6 +436,9 @@
     };
 
     MDSBlockCreator.prototype._initializeWorkspaces = function(instances) {
+        if (!instances.length) {  // Make sure there is a workspace
+            instances.push({name: 'Default'});
+        }
         // Add the workspaces
         instances.forEach(function(i) {
             this.workspaces[i.name] = {instance: i, yaml: ''};
@@ -445,9 +448,7 @@
             
         }, this);
 
-        if (instances.length) {
-            this._populateWorkspace(instances[0].name);
-        }
+        this._populateWorkspace(instances[0].name);
 
         // Add new button
         var btn = document.createElement('a');
