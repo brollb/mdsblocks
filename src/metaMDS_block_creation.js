@@ -222,6 +222,13 @@
         }
     };
 
+    MDSBlockCreator.prototype.clearProject = function() {
+        $(this.tagContainer).empty();
+        $(this.workspaceContainer).empty();
+        this.initialize();
+        //Blockly.getMainWorkspace().updateToolbox('<xml></xml>');
+    };
+
     /**
      * Create the blocks for a given project.
      *
@@ -232,12 +239,7 @@
     MDSBlockCreator.prototype.createProject = function(projectBlockNames, yamlConcepts, cb) {
         var instances;
 
-        // Empty old dom stuff
-        $(this.tagContainer).empty();
-        $(this.workspaceContainer).empty();
-
-        // initialize project stuff
-        this.initialize();
+        this.clearProject();
 
         // Create things!
         instances = this.createBlocks(yamlConcepts);
