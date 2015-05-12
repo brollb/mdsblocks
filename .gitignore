@@ -3,4 +3,3 @@ node_modules/
 *.swo
 *~
 oauth_token.js
-blockly/
