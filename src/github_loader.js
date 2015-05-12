@@ -11,11 +11,17 @@
     var GithubLoader = function(auth) {
         this._octo = new Octokat(auth);
 
+        this._manifestFileName = 'project.yaml';  // Accessible for testing
+
+        this.initialize();
+    };
+    
+    GithubLoader.prototype.initialize = function() {
         this.currentProject = null;
         this.currentRepo = null;
         this.projectConcepts = [];
-        this._manifestFileName = 'project.yaml';  // Accessible for testing
         this.loadedConcepts = {};  // yaml files stored by id
+        this.loadedProjects = {};
 
         // Priority of concepts. Contains a lexical numbering where 
         // 
@@ -31,7 +37,8 @@
      * @return {undefined}
      */
     GithubLoader.prototype.loadProject = function(url, callback) {
-        this.loadedProjects = {};
+        this.initialize();
+
         this.currentProject = this._cleanUrl(url);
         this._loadProject(this.currentProject, callback);
     };
