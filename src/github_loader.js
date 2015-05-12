@@ -57,9 +57,11 @@
     };
 
     GithubLoader.prototype.saveConcept = function(path, name, content) {
-        var concept = this._getUpdatedConcept(name, content, path),
+        var msg = (this.loadedConcepts[name] ? 'Modified ' : 'Created ') +
+                name+' with MDS Editor',
+            concept = this._getUpdatedConcept(name, content, path),
             config = {
-            message: 'Modified '+name+' with MDS Editor',
+            message: msg,
             content: Utils.to64bitString(content),
             sha: concept.sha
         };
@@ -146,16 +148,15 @@
         var data = info.split('/'),
             owner = data.shift(),
             projectName = data.shift(),
-            branch = data.shift(),
-            path = data.join('/'),
-            project = this._octo.repos(owner, projectName),
-            manifest = project.contents(manifestFileName).read();
+            ref = data.shift(),
+            path = data.join('/');
+        var project = this._octo.repos(owner, projectName).fetch({ref: ref || 'master'});
 
         // Record the project as loaded
         console.log('Loading '+info);
 
-        project.fetch(function(e, repo) {
-            if (repo.fullName+'/'+branch === this.currentProject) {
+        project.then(function(repo) {
+            if (repo.fullName+'/'+ref === this.currentProject) {
                 this.currentRepo = repo;
                 this._repoPriority[repo.fullName] = '0';
             }
@@ -180,7 +181,7 @@
                 async.each(deps, 
                     this._loadProject.bind(this),  // Load the dependency
                     // Store the concepts next
-                    this._loadProjectConcepts.bind(this, owner, projectName, path, callback));
+                    this._loadProjectConcepts.bind(this, owner, projectName, ref, path, callback));
 
             }.bind(this));
         }.bind(this));
@@ -246,7 +247,7 @@
     // If it is the current project, load all the concepts (recursively)
     // Otherwise, load root directory and the concepts directory
     // TODO
-    GithubLoader.prototype._loadProjectConcepts = function(owner, projectName, path, callback, err) {
+    GithubLoader.prototype._loadProjectConcepts = function(owner, projectName, ref, path, callback, err) {
         // Load all blocks in the project!
         // For each .yaml file in the root path, store it as a
         // concept
@@ -254,16 +255,17 @@
             return console.error('Could not dependencies of '+owner+'/'+projectName+':', err);
         }
 
-        this._octo.repos(owner, projectName).fetch(function(e, repo) {
+        this._octo.repos(owner, projectName).fetch({ref: ref || 'master'})
+            .then(function(repo) {
             console.log('About to read path:', path);
 
             // Get the contents
-            this._loadConcepts(repo, path, callback);
+            this._loadConcepts(repo, ref, path, callback);
         }.bind(this));
     };
 
-    GithubLoader.prototype._loadConcepts = function(repo, path, callback) {
-        this._loadAllFiles(repo, path, function(err, files) {
+    GithubLoader.prototype._loadConcepts = function(repo, ref, path, callback) {
+        this._loadAllFiles(repo, ref, path, function(err, files) {
             if (err) {
                 return console.error('Could not load files:', err);
             }
@@ -275,17 +277,16 @@
         }.bind(this));
     };
 
-    GithubLoader.prototype._loadAllFiles = function(repo, path, callback) {
+    GithubLoader.prototype._loadAllFiles = function(repo, ref, path, callback) {
         var isDir = R.pipe(
                 R.partialRight(Utils.getAttribute, 'type'),
                 R.partial(R.eq, 'dir')
             ),
-            loadDir = this._loadAllFiles.bind(this, repo);
+            loadDir = this._loadAllFiles.bind(this, repo, ref);
 
-        repo.contents(path).read().then(function(res) {
+        repo.contents(path).fetch({ref: ref}).then(function(files) {
 
-            var files = JSON.parse(res),
-                dirs = Utils.extract(isDir, files),
+            var dirs = Utils.extract(isDir, files),
                 dirPaths = R.map(R.partialRight(Utils.getAttribute, 'path'), dirs);
 
             // Load the directories..
