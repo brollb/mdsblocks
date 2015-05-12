@@ -33,6 +33,7 @@
     <script src="src/lib/yaml.js"></script>
 
     <script src="//code.jquery.com/jquery-2.1.3.js"></script>
+    <script src="src/lib/bootstrap.min.js"></script>
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/roboto.min.css">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/material-fullpalette.min.css">
@@ -71,7 +72,9 @@
     <script>
       var yaml = jsyaml;
       function init() {
-          var editor = new MDSEditor();
+          var editor = new MDSEditor({
+              openProjectBtn: document.getElementById('open-project')
+          });
 
           // Download, Save buttons
           document.getElementById('download').onclick = editor.downloadActiveWorkspace.bind(editor);
@@ -98,6 +101,7 @@
     </script>
   </head>
   <body onload="init()">
+
       <div id="workspace-container" class="btn-group btn-group-justified">
           <a href="javascript:void(0)" class="btn btn-default">Loading...</a>
       </div>
@@ -115,6 +119,9 @@
       </div>
     <xml id="toolbox" style="display: none"></xml>
     <div id="tag-container"></div>
+    <div class="pull-left">
+        <a id="open-project" href="javascript:void(0)" class="btn btn-info">Open Project</a>
+    </div>
     <div class="pull-right">
         <a id="toggle-editor" href="javascript:void(0)" class="btn btn-success">Edit Text</a>
         <a id="download" href="javascript:void(0)" class="btn btn-success">Download YAML</a>

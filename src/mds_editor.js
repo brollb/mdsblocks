@@ -1,4 +1,4 @@
-/*globals yaml,confirm,R,Utils,CodeEditor,alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
+/*globals prompt,yaml,confirm,R,Utils,CodeEditor,alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
 /*
  * MDS Editor contains the block container and Github loader container.
  *
@@ -20,6 +20,9 @@
         // Container for toolbox and text editor
         this.workingContainer = document.getElementById('working-container');
 
+        this.openProjectBtn = opts.openProjectBtn;
+        this.openProjectBtn.onclick = this.onChangeProjectClicked.bind(this);
+
         // Initialize the interfaces
         // Currently, I am using OAUTH_TOKEN = <my_github_token>. Obviously, to log in as
         // someone else, we can just change OAUTH_TOKEN
@@ -34,6 +37,13 @@
         this.toggleCodeEditor();
 
         this.loadProject(DEFAULT_PROJECT);
+    };
+
+    MDSEditor.prototype.onChangeProjectClicked = function() {
+        var project = prompt('Enter the github project url to open');
+        if (project) {
+            this.loadProject(project);
+        }
     };
 
     MDSEditor.prototype.loadProject = function(project) {
