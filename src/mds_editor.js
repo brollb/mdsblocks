@@ -8,8 +8,8 @@
 (function(global) {
     'use strict';
     
-    var DEFAULT_PROJECT = 'https://github.com/brollb/concept-creation';
-    //var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1';
+    //var DEFAULT_PROJECT = 'https://github.com/brollb/concept-creation';
+    var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1/tree/a491228f470cbc38a4766985722a920a2688b91d';
 
     var MDSEditor = function(opts) {
         this.toolbox = document.getElementById('toolbox');
