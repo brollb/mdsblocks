@@ -73,7 +73,9 @@
       var yaml = jsyaml;
       function init() {
           var editor = new MDSEditor({
-              openProjectBtn: document.getElementById('open-project')
+              openProjectBtn: document.getElementById('open-project'),
+              loginBtn: document.getElementById('login'),
+              logoutBtn: document.getElementById('logout')
           });
 
           // Download, Save buttons
@@ -120,6 +122,8 @@
     <xml id="toolbox" style="display: none"></xml>
     <div id="tag-container"></div>
     <div class="pull-left">
+        <a id="login" href="javascript:void(0)" class="btn btn-info">Login</a>
+        <a id="logout" href="javascript:void(0)" style="display:none" class="btn btn-warning">Logout</a>
         <a id="open-project" href="javascript:void(0)" class="btn btn-info">Open Project</a>
     </div>
     <div class="pull-right">

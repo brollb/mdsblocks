@@ -9,13 +9,29 @@
     var manifestFileName = 'project.yaml';
 
     var GithubLoader = function(auth) {
-        this._octo = new Octokat(auth);
-
+        this._octo = null;
         this._manifestFileName = 'project.yaml';  // Accessible for testing
 
-        this.initialize();
+        this.login(auth);
     };
     
+    GithubLoader.prototype.login = function(auth) {
+        this._octo = new Octokat(auth);
+        this.loggedIn = true;
+        this.initialize();
+    };
+
+    GithubLoader.prototype.logout = function() {
+        this._octo = new Octokat();
+        this.loggedIn = false;
+        this.initialize();
+    };
+
+    /**
+     * Initialize the current project.
+     *
+     * @return {undefined}
+     */
     GithubLoader.prototype.initialize = function() {
         this.currentProject = null;
         this.currentRepo = null;
@@ -39,8 +55,8 @@
     GithubLoader.prototype.loadProject = function(url, callback) {
         this.initialize();
 
-        this.currentProject = this._cleanUrl(url);
-        this._loadProject(this.currentProject, callback);
+            this.currentProject = this._cleanUrl(url);
+            this._loadProject(this.currentProject, callback);
     };
 
     /**
@@ -51,8 +67,12 @@
      * @return {undefined}
      */
     GithubLoader.prototype.saveProject = function(files) {
-        this._saveToPath(files.instances, 'code/');
-        this._saveToPath(files.concepts, 'concepts/');
+        if (this.loggedIn) {
+            this._saveToPath(files.instances, 'code/');
+            this._saveToPath(files.concepts, 'concepts/');
+        } else {
+            console.error('Not logged in. Please log in before saving a project.');
+        }
     };
 
     GithubLoader.prototype._saveToPath = function(files, path) {

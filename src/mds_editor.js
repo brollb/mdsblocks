@@ -1,4 +1,4 @@
-/*globals prompt,yaml,confirm,R,Utils,CodeEditor,alert,GithubLoader,OAUTH_TOKEN,MDSBlockCreator,Blockly*/
+/*globals prompt,yaml,confirm,OAUTH_TOKEN,R,Utils,CodeEditor,alert,GithubLoader,MDSBlockCreator,Blockly*/
 /*
  * MDS Editor contains the block container and Github loader container.
  *
@@ -8,8 +8,8 @@
 (function(global) {
     'use strict';
     
-    //var DEFAULT_PROJECT = 'https://github.com/brollb/concept-creation';
-    var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1/tree/a491228f470cbc38a4766985722a920a2688b91d';
+    var DEFAULT_PROJECT = 'https://github.com/brollb/concept-creation';
+    //var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1/tree/a491228f470cbc38a4766985722a920a2688b91d';
 
     var MDSEditor = function(opts) {
         this.toolbox = document.getElementById('toolbox');
@@ -20,13 +20,21 @@
         // Container for toolbox and text editor
         this.workingContainer = document.getElementById('working-container');
 
+        // Opening new projects
         this.openProjectBtn = opts.openProjectBtn;
         this.openProjectBtn.onclick = this.onChangeProjectClicked.bind(this);
+
+        // Login/logout
+        this.loginBtn = opts.loginBtn;
+        this.loginBtn.onclick = this.onLoginClicked.bind(this);
+
+        this.logoutBtn = opts.logoutBtn;
+        this.logoutBtn.onclick = this.onLogoutClicked.bind(this);
 
         // Initialize the interfaces
         // Currently, I am using OAUTH_TOKEN = <my_github_token>. Obviously, to log in as
         // someone else, we can just change OAUTH_TOKEN
-        this.github = new GithubLoader({token: OAUTH_TOKEN});
+        this.github = new GithubLoader();
         this.blockEditor = new MDSBlockCreator(this.toolbox, 
                                 this.workspaceContainer, this.tagContainer);
         //this.blockEditor.onWorkspaceChanged = this.updateCodeEditor.bind(this);
@@ -37,6 +45,21 @@
         this.toggleCodeEditor();
 
         this.loadProject(DEFAULT_PROJECT);
+    };
+
+    MDSEditor.prototype.onLoginClicked = function() {
+        var token = prompt('Please enter your Github OAuth token:', OAUTH_TOKEN);
+        if (token) {
+            this.github.login({token: token});  // FIXME: Check that the user logged in correctly
+            this.loginBtn.setAttribute('style', 'display:none');
+            this.logoutBtn.setAttribute('style', 'display:inline');
+        }
+    };
+
+    MDSEditor.prototype.onLogoutClicked = function() {
+        this.github.logout();
+        this.logoutBtn.setAttribute('style', 'display:none');
+        this.loginBtn.setAttribute('style', 'display:inline');
     };
 
     MDSEditor.prototype.onChangeProjectClicked = function() {
