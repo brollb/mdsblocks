@@ -9,24 +9,36 @@ This contains my blockly-concepts integration for metamds
     + project.yaml
 
 ## To Do:
++ Set up travis ci
+    + Add more tests
+
++ Remove cdn dependency
+
++ Duplicate workspaces on opening a new thing
+    + 
+
++ I think there is a bug in octokat
+    + I think it is doing unauthenticated reads to github... (these are limited)
+
+## Completed To Do Items:
++ Load a block from a `yaml` concept file
+    + `description` can simply be a tooltip
+    + for each element in `properties`, we can create an input? ... 
+
+    + How do we know the output of the concept? 
+    + DONE
+
 + Github login
+    + DONE
+
 + Text view of the blocks
     + diffs
     + class inheritance
     + class override
 
     + Detect if the base class no longer fits
+    + DONE
 
-+ I think there is a bug in octokat
-    + I think it is doing unauthenticated reads to github... (these are limited)
-
-+ Load a block from a `yaml` concept file
-    + `description` can simply be a tooltip
-    + for each element in `properties`, we can create an input? ... 
-
-    + How do we know the output of the concept? 
-
-## Completed To Do Items:
 + Should populate the toolbar by the tagged elements
 
 + Add primitive types to toolbar
