@@ -15,6 +15,12 @@
     var root, previous_async;
 
     root = this;
+
+    // minifying is a Bitch
+    if(root == undefined) {
+        root = window;
+    }
+
     if (root != null) {
       previous_async = root.async;
     }
