@@ -2,13 +2,13 @@
 /*
  * MDS Editor contains the block container and Github loader container.
  *
- * Basically, MDS Editor facilitates communication between the loader and the 
+ * Basically, MDS Editor facilitates communication between the loader and the
  * block creator.
  */
 (function(global) {
     'use strict';
-    
-    var DEFAULT_PROJECT = 'https://github.com/brollb/concept-creation';
+
+    var DEFAULT_PROJECT = 'https://github.com/iModels/concept-creation';
     //var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1/tree/a491228f470cbc38a4766985722a920a2688b91d';
 
     var MDSEditor = function(opts) {
@@ -35,7 +35,7 @@
         // Currently, I am using OAUTH_TOKEN = <my_github_token>. Obviously, to log in as
         // someone else, we can just change OAUTH_TOKEN
         this.github = new GithubLoader();
-        this.blockEditor = new MDSBlockCreator(this.toolbox, 
+        this.blockEditor = new MDSBlockCreator(this.toolbox,
                                 this.workspaceContainer, this.tagContainer);
         //this.blockEditor.onWorkspaceChanged = this.updateCodeEditor.bind(this);
 
@@ -114,7 +114,7 @@
 
     MDSEditor.prototype.downloadActiveWorkspace = function() {
         // Get the name of the current project
-        
+
         this._download(Blockly.Python.workspaceToCode(), this.blockEditor.currentWorkspace+'.yaml');
     };
 

@@ -55,6 +55,33 @@
         width: 100%;
       }
 
+      .main {
+        display: table;
+      }
+      #workspace-container {
+        position: absolute;
+        height: 36px;
+        top: 0;
+        width: 100%;
+        margin: 0;
+      }
+      .workspace-main {
+        position: absolute;
+        width: 100%;
+        top: 40px;
+        bottom: 50px;
+      }
+      .workspace-footer {
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+        height: 50px;
+      }
+
+      #working-container {
+        height: 100%;
+      }
+
       #toolbox-container {
           float: left;
           height: 100%;
@@ -64,7 +91,7 @@
       #editor-container {
         background: gray;
 
-        float: left;
+        float: right;
         position: absolute;
         height: 100%;
         width: 50%;
@@ -104,33 +131,35 @@
     </script>
   </head>
   <body onload="init()">
-
+    <div class="main">
       <div id="workspace-container" class="btn-group btn-group-justified">
           <a href="javascript:void(0)" class="btn btn-default">Loading...</a>
       </div>
-      <div class="container-fluid" style="height:90%">
-      <div class="row" style="height:100%">
+      <div class="workspace-main">
 
-          <div id="tag-container" class="btn-group-vertical col-md-1">
-              <a href="javascript:void(0)" class="btn btn-default">Loading...</a>
-          </div>
-          <div id='working-container' style="height:100%;width:100%">
-              <div class="col-md-4" id="toolbox-container"></div>
-              <textarea class="col-md-4" id="editor-container"></textarea>
-          </div>
+            <div id="tag-container" class="btn-group-vertical col-md-1">
+                <a href="javascript:void(0)" class="btn btn-default">Loading...</a>
+            </div>
+            <div id='working-container'>
+                <div class="" id="toolbox-container"></div>
+                <textarea class="" id="editor-container"></textarea>
+            </div>
+
       </div>
+      <xml id="toolbox" style="display: none"></xml>
+      <div id="tag-container"></div>
+      <div class="workspace-footer">
+        <div class="pull-left">
+            <a id="login" href="javascript:void(0)" class="btn btn-info">Login</a>
+            <a id="logout" href="javascript:void(0)" style="display:none" class="btn btn-warning">Logout</a>
+            <a id="open-project" href="javascript:void(0)" class="btn btn-info">Open Project</a>
+        </div>
+        <div class="pull-right">
+            <a id="toggle-editor" href="javascript:void(0)" class="btn btn-success">Edit Text</a>
+            <a id="download" href="javascript:void(0)" class="btn btn-success">Download YAML</a>
+            <a id="save" href="javascript:void(0)" class="btn btn-success">Commit</a>
+        </div>
       </div>
-    <xml id="toolbox" style="display: none"></xml>
-    <div id="tag-container"></div>
-    <div class="pull-left">
-        <a id="login" href="javascript:void(0)" class="btn btn-info">Login</a>
-        <a id="logout" href="javascript:void(0)" style="display:none" class="btn btn-warning">Logout</a>
-        <a id="open-project" href="javascript:void(0)" class="btn btn-info">Open Project</a>
-    </div>
-    <div class="pull-right">
-        <a id="toggle-editor" href="javascript:void(0)" class="btn btn-success">Edit Text</a>
-        <a id="download" href="javascript:void(0)" class="btn btn-success">Download YAML</a>
-        <a id="save" href="javascript:void(0)" class="btn btn-success">Commit</a>
     </div>
   </body>
   <!-- Download button -->
