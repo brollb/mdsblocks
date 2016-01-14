@@ -127,6 +127,10 @@
               // TODO
           };
           window.onresize = updateLayout;
+
+          if(onIPyHook !== undefined && typeof(onIPyHook) === 'function') {
+            onIPyHook(editor);
+          }
       }
     </script>
   </head>

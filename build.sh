@@ -53,4 +53,7 @@ sed -i.bak -n '/<link rel="stylesheet" href="\(.*\)">/!p' ${BUILDDIR}/${HTMLFILE
 # add script tag for CSS_OUTPUT
 sed -i.bak -e $'s#<meta charset="utf-8">#<meta charset="utf-8">\\\n    <link rel="stylesheet" href="'${CSS_OUTPUT}'\">#g' ${BUILDDIR}/${HTMLFILE}
 
+# add ipy script tag
+sed -i.bak -e $'s#<\/body>#  <script src="mdsblocks-ipy.js"><\/script>\\\n  <\/body>#g' ${BUILDDIR}/${HTMLFILE}
+
 rm ${BUILDDIR}/*.bak

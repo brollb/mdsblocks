@@ -8,7 +8,7 @@
 (function(global) {
     'use strict';
 
-    var DEFAULT_PROJECT = 'https://github.com/iModels/concept-creation';
+    global.DEFAULT_PROJECT = 'https://github.com/iModels/concept-creation';
     //var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1/tree/a491228f470cbc38a4766985722a920a2688b91d';
 
     var MDSEditor = function(opts) {
@@ -44,7 +44,7 @@
         this.codeEditor.onExit = this.updateBlockEditor.bind(this);
         this.toggleCodeEditor();
 
-        this.loadProject(DEFAULT_PROJECT);
+        this.loadProject(global.DEFAULT_PROJECT);
     };
 
     MDSEditor.prototype.onLoginClicked = function() {

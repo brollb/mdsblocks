@@ -107,7 +107,7 @@
             isInDict = R.partialRight(R.has, dict),
             removeNonDictTypes = R.partial(R.filter, isInDict);
 
-        // Remove external dependencies 
+        // Remove external dependencies
         nodes = R.map(removeNonDictTypes, nodes);
 
         // Convert nodes to a name -> node dictionary
@@ -116,9 +116,9 @@
             return concepts[index].name;
         };
         var nodeDict = Utils.createDictionary(getNameFromConceptArray, nodes);
-        
+
         // Sort the remaining nodes
-        var independents, 
+        var independents,
             orderedNodes = [],
             node;
 
@@ -208,7 +208,7 @@
     };
 
     /**
-     * Create blocks for the toolbar for the primitive types defined in 
+     * Create blocks for the toolbar for the primitive types defined in
      * PRIMITIVES.
      *
      * @return {undefined}
@@ -321,7 +321,7 @@
         values.forEach(function(v) {
             // Connect the first statement
             block = mainBlock;
-            children = 
+            children =
                 (instance[type][v] instanceof Array ? instance[type][v] : [instance[type][v]])
                     .slice();
             i = 0;
@@ -393,7 +393,7 @@
 
                 // Set the acceptable types
                 input.setCheck(type)
-                // Pretty things up 
+                // Pretty things up
                 .appendField(displayName)
                 .setAlign(Blockly.ALIGN_RIGHT);
 
@@ -438,7 +438,7 @@
     };
 
     MDSBlockCreator.prototype._initializeWorkspaces = function(instances) {
-        if (!instances.length) {  // Make sure there is a workspace
+        if (instances.length === 0) {  // Make sure there is a workspace
             instances.push({name: 'Default'});
         }
         // Add the workspaces
@@ -447,7 +447,7 @@
 
             // Create HTML
             this._createWorkspaceButton(i.name);
-            
+
         }, this);
 
         this._populateWorkspace(instances[0].name);
@@ -569,7 +569,7 @@
         btn.setAttribute('class', DEFAULT_CLASS.TAG);
         btn.innerHTML = tag;
         btn.onclick = this._toggleTag.bind(this, tag);
-        
+
         return btn;
     };
 
@@ -734,7 +734,7 @@
     };
 
     /**
-     * Update the blocks to match the given yaml text. 
+     * Update the blocks to match the given yaml text.
      *
      * @param {ConceptInstance} instance
      * @return {Boolean} updated
@@ -749,7 +749,7 @@
         //     Update the block's name
         //
         // For every property in the block
-        //     If the block is primitive, 
+        //     If the block is primitive,
         //         validate the type
         //     Else,
         //         recurse
@@ -834,7 +834,7 @@
 
         // Add each of the instance types
 
-        concept.properties = R.mapObj(R.pipe(this._getPrimitive, getName, createTypeInfo), 
+        concept.properties = R.mapObj(R.pipe(this._getPrimitive, getName, createTypeInfo),
                                 instance[name]);
         return concept;
     };
