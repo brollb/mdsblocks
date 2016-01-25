@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="mdsblocks-dist.css">
+    <script src="mdsblocks-dist.js"></script>
+
+
+
+
+
+
+
+    <style>
+      html, body {
+        background-color: #fff;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+      }
+      .blocklySvg {
+        height: 100%;
+        width: 100%;
+      }
+
+      .main {
+        display: table;
+      }
+      #workspace-container {
+        position: absolute;
+        height: 36px;
+        top: 0;
+        width: 100%;
+        margin: 0;
+      }
+      .workspace-main {
+        position: absolute;
+        width: 100%;
+        top: 40px;
+        bottom: 100px;
+      }
+      .workspace-footer {
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+        height: 50px;
+      }
+
+      #working-container {
+        height: 100%;
+      }
+
+      #toolbox-container {
+          float: left;
+          height: 100%;
+          width: 50%;
+      }
+
+      #editor-container {
+        background: gray;
+
+        float: right;
+        position: absolute;
+        height: 100%;
+        width: 50%;
+      }
+    </style>
+    <script>
+      var yaml = jsyaml;
+      function init() {
+          var editor = new MDSEditor({
+              openProjectBtn: document.getElementById('open-project'),
+              loginBtn: document.getElementById('login'),
+              logoutBtn: document.getElementById('logout')
+          });
+
+          // Download, Save buttons
+          document.getElementById('download').onclick = editor.downloadActiveWorkspace.bind(editor);
+          document.getElementById('save').onclick = editor.saveProject.bind(editor);
+          document.getElementById('toggle-editor').onclick = editor.toggleCodeEditor.bind(editor);
+
+          // Update the layout on resize
+          var editorContainer = document.getElementById('editor-container'),
+              toolboxContainer = document.getElementById('toolbox-container');
+
+          var updateLayout = function() {
+              // Get width, left
+              var rect = toolboxContainer.getBoundingClientRect(),
+                  pos = rect.left + rect.width;
+
+              // Set left of editorContainer
+              editorContainer.style.left = pos+'px';
+
+              // Fix the height, width
+              // TODO
+          };
+          window.onresize = updateLayout;
+
+          if(onIPyHook !== undefined && typeof(onIPyHook) === 'function') {
+            onIPyHook(editor);
+          }
+      }
+    </script>
+  </head>
+  <body onload="init()">
+    <div class="main">
+      <div id="workspace-container" class="btn-group btn-group-justified">
+          <a href="javascript:void(0)" class="btn btn-default">Loading...</a>
+      </div>
+      <div class="workspace-main">
+
+            <div id="tag-container" class="btn-group-horizontal">
+                <a href="javascript:void(0)" class="btn btn-default">Loading...</a>
+            </div>
+            <div id='working-container'>
+                <div class="" id="toolbox-container"></div>
+                <textarea class="" id="editor-container"></textarea>
+            </div>
+
+      </div>
+      <xml id="toolbox" style="display: none"></xml>
+      <div id="tag-container"></div>
+      <div class="workspace-footer">
+        <div class="pull-left">
+            <a id="login" href="javascript:void(0)" class="btn btn-info">Login</a>
+            <a id="logout" href="javascript:void(0)" style="display:none" class="btn btn-warning">Logout</a>
+            <a id="open-project" href="javascript:void(0)" class="btn btn-info">Open Project</a>
+        </div>
+        <div class="pull-right">
+            <a id="toggle-editor" href="javascript:void(0)" class="btn btn-success">Edit Text</a>
+            <a id="download" href="javascript:void(0)" class="btn btn-success">Download YAML</a>
+            <a id="save" href="javascript:void(0)" class="btn btn-success">Commit</a>
+        </div>
+      </div>
+    </div>
+    <script src="mdsblocks-ipy.js"></script>
+  </body>
+</html>

@@ -20,6 +20,11 @@ This contains my blockly-concepts integration for metamds
 + I think there is a bug in octokat
     + I think it is doing unauthenticated reads to github... (these are limited)
 
+## Building (for use as IPython extensions)
++ Install node and npm (sudo port install nodejs; sudo port install npm)
++ Install uglifyjs and uglifycss (sudo npm install uglifyjs -g; sudo npm install uglifycss -g)
+
+
 ## Completed To Do Items:
 + Load a block from a `yaml` concept file
     + `description` can simply be a tooltip
