@@ -303,9 +303,7 @@
             values,
             child;
 
-        // Hack
         if (!concept) {
-            // Return a 'string' block for now
             return this._createPrimitiveBlock(instance);
         }
 
@@ -438,19 +436,24 @@
     };
 
     MDSBlockCreator.prototype._initializeWorkspaces = function(instances) {
-        if (instances.length === 0) {  // Make sure there is a workspace
-            instances.push({name: 'Default'});
-        }
         // Add the workspaces
-        instances.forEach(function(i) {
-            this.workspaces[i.name] = {instance: i, yaml: ''};
+        var workspaces = instances.map(instance => instance.name);
+
+        if (workspaces.length === 0) {  // Make sure there is a workspace
+            workspaces.push('Default');
+        }
+        workspaces.forEach(function(name, i) {
+            this.workspaces[name] = {yaml: ''};
+            if (instances[i]) {
+                this.workspaces[name].instance = instances[i];
+            }
 
             // Create HTML
-            this._createWorkspaceButton(i.name);
+            this._createWorkspaceButton(name);
 
         }, this);
 
-        this._populateWorkspace(instances[0].name);
+        this._populateWorkspace(workspaces[0]);
 
         // Add new button
         var btn = document.createElement('a');
