@@ -6191,6 +6191,7 @@ module.exports = injectVerbMethods;
     };
     
     GithubLoader.prototype.login = function(auth) {
+        console.log('authenticating with:', auth);
         this._octo = new Octokat(auth);
         this.loggedIn = true;
         this.initialize();
