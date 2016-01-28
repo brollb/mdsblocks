@@ -6,7 +6,9 @@
 (function(global) {
     'use strict';
 
-    var MANIFEST_FILE = 'online_project.yaml';
+    var MANIFEST_FILE = 'online_project.yaml',
+        CONCEPT_KEY = 'concept_path',
+        CODE_KEY = 'code_path';
 
     var GithubLoader = function(auth) {
         this._octo = null;
@@ -88,10 +90,10 @@
                 name+' with MDS Editor',
             concept = this._getUpdatedConcept(name, content, path),
             config = {
-            message: msg,
-            content: Utils.to64bitString(content),
-            sha: concept.sha
-        };
+                message: msg,
+                content: Utils.to64bitString(content),
+                sha: concept.sha
+            };
 
         this.currentRepo.contents(concept.path).add(config)
             .then(function(info) {
@@ -208,12 +210,18 @@
 
         // Read the file
         contents.then(function(result) {
-            var deps = yaml.load(result.content).path || [];
+            var deps = yaml.load(result.content)[CONCEPT_KEY] || [],
+                codePaths = yaml.load(result.content)[CODE_KEY] || [];
 
             // Remove non-Github paths
-            deps = deps.filter(Utils.isGithubURL);
+            deps = deps.concat(codePaths)
+                .filter(Utils.isGithubURL);
 
             cb(deps);
+        })
+        // If the manifest doesn't exist, assume no dependencies
+        .catch(function(err) {
+            cb([]);
         });
     };
 
