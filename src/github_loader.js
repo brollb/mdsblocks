@@ -6,11 +6,11 @@
 (function(global) {
     'use strict';
 
-    var manifestFileName = 'project.yaml';
+    var MANIFEST_FILE = 'online_project.yaml';
 
     var GithubLoader = function(auth) {
         this._octo = null;
-        this._manifestFileName = 'project.yaml';  // Accessible for testing
+        this._manifestFileName = MANIFEST_FILE;  // Accessible for testing
 
         this.login(auth);
     };
@@ -117,19 +117,13 @@
     };
 
     /**
-     * Extract the <owner>/<project>/<branch> string from a URL
+     * Extract the <owner>/<project>/<path> string from a URL
      *
      * @param {String} url
      * @return {String} <owner>/<url>
      */
     GithubLoader.prototype._cleanUrl = function(url) {
         url = url.split('github.com/').pop();
-
-        if (/[\w\-_]+\/[\w\-_]+\/tree/.test(url)) {
-            url = url.split('/tree').join('');  // Remove '/tree'
-        } else {
-            url += '/master';  // Assume master branch by default
-        }
 
         return url;
     };
@@ -155,7 +149,7 @@
      * @return {Dictionary<Concept>}
      */
     GithubLoader.prototype.getConcepts = function() {
-        var isProjectManifest = R.partial(R.eq, Utils.removeFileExtension(manifestFileName)),
+        var isProjectManifest = R.partial(R.eq, Utils.removeFileExtension(MANIFEST_FILE)),
             conceptFilter = R.pipe(R.nthArg(1), Utils.not(isProjectManifest)),
             rawConcepts = R.pickBy(conceptFilter, this.loadedConcepts);
 
@@ -175,15 +169,15 @@
         var data = info.split('/'),
             owner = data.shift(),
             projectName = data.shift(),
-            ref = data.shift(),
-            path = data.join('/');
-        var project = this._octo.repos(owner, projectName).fetch({ref: ref || 'master'});
+            ref = 'master',  // data.shift(),
+            path = data.join('/'),
+            project = this._octo.repos(owner, projectName).fetch();
 
         // Record the project as loaded
-        console.log('Loading '+info);
+        console.log('Loading ' + path + ' from ' + projectName + ' (' + owner + ')');
 
         project.then(function(repo) {
-            if (repo.fullName+'/'+ref === this.currentProject) {
+            if ((repo.fullName+'/'+path).toLowerCase() === this.currentProject) {
                 this.currentRepo = repo;
                 this._repoPriority[repo.fullName] = '0';
             }
@@ -191,13 +185,7 @@
             this.loadedProjects[info] = true;
 
             // Retrieve the project.yaml file
-            this._storeConcept(repo, {name: manifestFileName, 
-                                      path: manifestFileName}, function(err, result) {
-                var deps = yaml.load(result.content).path || [];
-
-                // Remove non-Github paths
-                deps = deps.filter(Utils.isGithubURL);
-
+            this._getDependencies(repo, path, function(deps) {
                 // Convert urls to project name and remove already loaded projects
                 deps = R.map(this._cleanUrl, deps)
                     .filter(Utils.not(this.isProjectLoaded.bind(this)));
@@ -214,6 +202,21 @@
         }.bind(this));
     };
 
+    GithubLoader.prototype._getDependencies = function(repo, path, cb) {
+        var manifestPath = path + '/' + MANIFEST_FILE,
+            contents = repo.contents(manifestPath).read();
+
+        // Read the file
+        contents.then(function(result) {
+            var deps = yaml.load(result.content).path || [];
+
+            // Remove non-Github paths
+            deps = deps.filter(Utils.isGithubURL);
+
+            cb(deps);
+        });
+    };
+
     GithubLoader.prototype._getRepo = function(info, cb) {
         var data = info.split('/'),
             owner = data.shift(),
@@ -221,7 +224,7 @@
             branch = data.shift(),
             path = data.join('/'),
             project = this._octo.repos(owner, projectName),
-            manifest = project.contents(manifestFileName).read();
+            manifest = project.contents(MANIFEST_FILE).read();
 
         // Record the project as loaded
         console.log('Loading '+info);

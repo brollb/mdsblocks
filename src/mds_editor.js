@@ -8,7 +8,7 @@
 (function(global) {
     'use strict';
 
-    global.DEFAULT_PROJECT = 'https://github.com/iModels/concept-creation';
+    global.DEFAULT_PROJECT = 'https://github.com/imodels/demos/demos/ethane_box/binary_lj_sim';
     //var DEFAULT_PROJECT = 'https://github.com/brollb/metamds-p1/tree/a491228f470cbc38a4766985722a920a2688b91d';
 
     var MDSEditor = function(opts) {
@@ -34,7 +34,8 @@
         // Initialize the interfaces
         // Currently, I am using OAUTH_TOKEN = <my_github_token>. Obviously, to log in as
         // someone else, we can just change OAUTH_TOKEN
-        this.github = new GithubLoader();
+        var auth = typeof OAUTH_TOKEN === 'undefined' ? undefined : {token: OAUTH_TOKEN};
+        this.github = new GithubLoader(auth);
         this.blockEditor = new MDSBlockCreator(this.toolbox,
                                 this.workspaceContainer, this.tagContainer);
         //this.blockEditor.onWorkspaceChanged = this.updateCodeEditor.bind(this);
@@ -48,7 +49,8 @@
     };
 
     MDSEditor.prototype.onLoginClicked = function() {
-        var token = prompt('Please enter your Github OAuth token:', OAUTH_TOKEN);
+        var hint = typeof OAUTH_TOKEN === 'undefined' ? '' : OAUTH_TOKEN,
+            token = prompt('Please enter your Github OAuth token:', hint);
         if (token) {
             this.github.login({token: token});  // FIXME: Check that the user logged in correctly
             this.loginBtn.setAttribute('style', 'display:none');
