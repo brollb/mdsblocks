@@ -97,7 +97,7 @@
           };
           window.onresize = updateLayout;
 
-          if(onIPyHook !== undefined && typeof(onIPyHook) === 'function') {
+          if(typeof onIPyHook !== 'undefined' && typeof(onIPyHook) === 'function') {
             onIPyHook(editor);
           }
       }
