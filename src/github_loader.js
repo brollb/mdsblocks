@@ -362,7 +362,7 @@
             }
 
             // Store project concepts
-            if (this.currentRepo.fullName === repo.fullName) {
+            if (this.currentRepo && this.currentRepo.fullName === repo.fullName) {
                 this.projectConcepts.push(Utils.removeFileExtension(concept.name));
             }
             callback(null, concept);
