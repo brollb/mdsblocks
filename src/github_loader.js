@@ -58,7 +58,7 @@
     GithubLoader.prototype.loadProject = function(url, callback) {
         this.initialize();
 
-            this.currentProject = this._cleanUrl(url);
+            this.currentProject = this._cleanUrl(url).toLowerCase();
             this._loadProject(this.currentProject, callback);
     };
 
