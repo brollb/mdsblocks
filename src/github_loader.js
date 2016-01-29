@@ -202,7 +202,19 @@
                     this._loadProjectConcepts.bind(this, owner, projectName, ref, path, callback));
 
             }.bind(this));
-        }.bind(this));
+        }.bind(this))
+        .catch(err => {
+            console.error('Project load failed:', err);
+            var questions = [
+                '- Is your github token correct?',
+                '- Is your github url correct?',
+                '- Have you removed "blob/master" from your github url? ' + 
+                'It should look like "https://github.com/<USER>/<PROJECT>/<PATH>"'
+            ].join('\n');
+
+            alert('Could not load project "' + projectName + '". Please check ' + 
+                'the following and try again:\n' + questions);
+        });
     };
 
     GithubLoader.prototype._getDependencies = function(repo, path, cb) {
