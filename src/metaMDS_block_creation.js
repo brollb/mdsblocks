@@ -437,7 +437,7 @@
 
     MDSBlockCreator.prototype._initializeWorkspaces = function(instances) {
         // Add the workspaces
-        var workspaces = instances.map(instance => instance.name);
+        var workspaces = instances.map(function(instance) { return instance.name; });
 
         if (workspaces.length === 0) {  // Make sure there is a workspace
             workspaces.push('Default');
