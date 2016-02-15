@@ -203,7 +203,7 @@
 
             }.bind(this));
         }.bind(this))
-        .catch(err => {
+        .catch(function(err) {
             console.error('Project load failed:', err);
             var questions = [
                 '- Is your github token correct?',
