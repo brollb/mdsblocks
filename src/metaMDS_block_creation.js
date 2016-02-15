@@ -14,6 +14,13 @@
                 field: 'TEXT',
                 name: 'string'
             },
+            // Template
+            {
+                regex: /^\s*{{\s*[a-zA-Z-_]+\s*}}\s*$/,
+                block: 'template_block',
+                field: 'TEXT',
+                name: 'template_block'
+            },
             // Float
             {
                 regex: /\d*\.\d+/,
@@ -32,6 +39,26 @@
         ALL_BLOCKS = 'All',
         SELECTED_CLASS = {TAG: 'btn btn-info', WORKSPACE: 'btn btn-info'},
         DEFAULT_CLASS = {TAG: 'btn btn-default', WORKSPACE: 'btn btn-default'};
+
+    // Template type definition
+    // - Contains text
+    // - Can be used in any place
+    var TEMPLATE_BLOCK = {
+        "id": "template_block",
+        "message0": "%1",
+        "args0": [
+            {
+                "type": "field_input",
+                "name": "TEXT",
+                "text": ""
+            }
+        ],
+        "inputsInline": true,
+        "output": null,
+        "colour": 290,
+        "tooltip": "A template tag to be populated later",
+        "helpUrl": "http://www.example.com/"
+    };
 
     /**
      * MDSBlockCreator
@@ -220,6 +247,17 @@
             this._registerConceptWithTag({name: name}, 'Primitives');
             this._registerConceptWithTag({name: name}, ALL_BLOCKS);
         }
+        // Create the template block
+        Blockly.Blocks[TEMPLATE_BLOCK.id] = {
+            init: function() {
+                this.jsonInit(TEMPLATE_BLOCK);
+            }
+        };
+
+        // Add code generation
+        Blockly.Python[TEMPLATE_BLOCK.id] = function(block) {
+            return '{{ ' + Blockly.Python.valueToCode(block, 'TEXT') + ' }}';
+        };
     };
 
     MDSBlockCreator.prototype.clearProject = function() {
@@ -622,6 +660,7 @@
      * @return {undefined}
      */
     MDSBlockCreator.prototype._getCodeFunction = function(concept, block) {
+        // TODO: Add the 'template' block...
         // For each property, check if it is a list type
         var fields = concept.properties,
             names = Object.keys(fields),
